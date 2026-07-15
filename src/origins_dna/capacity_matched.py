@@ -8,6 +8,7 @@ equal information content or equal effective model complexity.
 
 from __future__ import annotations
 
+from functools import lru_cache
 import json
 import math
 import random
@@ -57,6 +58,12 @@ def make_signed_projection(
     )
 
 
+def _apply_validated_projection(vector: Vector, matrix: tuple[tuple[float, ...], ...]) -> Vector:
+    """Apply an already validated matrix without repeating structural scans."""
+
+    return tuple(sum(weight * value for weight, value in zip(row, vector)) for row in matrix)
+
+
 def apply_projection(vector: Sequence[float], matrix: Sequence[Sequence[float]]) -> Vector:
     """Apply a rectangular projection matrix to one finite numeric vector."""
 
@@ -77,7 +84,7 @@ def apply_projection(vector: Sequence[float], matrix: Sequence[Sequence[float]])
         raise ValueError("vector values must be finite")
     if any(not math.isfinite(value) for row in rows for value in row):
         raise ValueError("matrix values must be finite")
-    return tuple(math.fsum(weight * value for weight, value in zip(row, materialized)) for row in rows)
+    return _apply_validated_projection(materialized, rows)
 
 
 def projected_representation(
@@ -91,8 +98,14 @@ def projected_representation(
 
     matrix = make_signed_projection(input_dimension, output_dimension, seed=seed)
 
+    @lru_cache(maxsize=None)
     def transform(sequence: str) -> Vector:
-        return apply_projection(representation(sequence), matrix)
+        vector = representation(sequence)
+        if len(vector) != input_dimension:
+            raise ValueError(
+                f"representation produced dimension {len(vector)}; expected {input_dimension}"
+            )
+        return _apply_validated_projection(vector, matrix)
 
     return transform
 
@@ -124,21 +137,28 @@ def dimension_matched_representation_registry(
     if not isinstance(projection_seed, int):
         raise TypeError("projection_seed must be an integer")
 
-    tetranucleotide: Representation = lambda sequence: kmer_frequency_vector(sequence, 4)
+    @lru_cache(maxsize=None)
+    def orbital_source(sequence: str) -> Vector:
+        return orbital_multilag_tensor_vector(sequence)
+
+    @lru_cache(maxsize=None)
+    def tetranucleotide_source(sequence: str) -> Vector:
+        return kmer_frequency_vector(sequence, 4)
+
     registry: dict[str, Representation] = {
-        _RAW_ORBITAL_NAME: orbital_multilag_tensor_vector,
-        _RAW_TETRANUCLEOTIDE_NAME: tetranucleotide,
+        _RAW_ORBITAL_NAME: orbital_source,
+        _RAW_TETRANUCLEOTIDE_NAME: tetranucleotide_source,
     }
     for ordinal, budget in enumerate(materialized_budgets):
         family_seed = derived_seed(projection_seed, ordinal)
         registry[f"orbital_projected_{budget}"] = projected_representation(
-            orbital_multilag_tensor_vector,
+            orbital_source,
             input_dimension=_ORBITAL_INPUT_DIMENSION,
             output_dimension=budget,
             seed=derived_seed(family_seed, 1),
         )
         registry[f"tetranucleotide_projected_{budget}"] = projected_representation(
-            tetranucleotide,
+            tetranucleotide_source,
             input_dimension=_TETRANUCLEOTIDE_INPUT_DIMENSION,
             output_dimension=budget,
             seed=derived_seed(family_seed, 2),
