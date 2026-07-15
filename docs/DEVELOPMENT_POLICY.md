@@ -17,6 +17,17 @@ Every source change should have:
 4. no biological conclusion inferred from software correctness;
 5. no hidden destructive repository operation.
 
+## Controlled benchmark gate
+
+Every comparative benchmark should:
+
+1. pre-declare the task, representations, classifier, splits and metrics;
+2. use identical held-out indices for compared representations within a seed;
+3. include conventional controls, relevant null models and ablations;
+4. preserve all results, including negative and neutral outcomes;
+5. write a machine-readable result with reproducible configuration and checksum;
+6. distinguish synthetic software performance from biological evidence.
+
 ## Clean LaTeX gate
 
 Every LaTeX source should:

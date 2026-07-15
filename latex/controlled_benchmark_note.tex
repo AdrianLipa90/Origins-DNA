@@ -1,0 +1,84 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{hyperref}
+\geometry{margin=1in}
+\hypersetup{hidelinks}
+
+\title{Origins-DNA v0.3: Controlled Synthetic Benchmark}
+\author{Adrian Lipa}
+\date{15 July 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We compare conventional DNA sequence representations with the experimental
+orbital and atomic summary introduced in Origins-DNA v0.2.  The experiment uses
+synthetic data, matched nucleotide composition, explicit null models, channel
+ablations, repeated seeds, and bootstrap confidence intervals.  The result does
+not validate a biological mechanism.
+\end{abstract}
+
+\section{Task definition}
+Let $s\in\{A,C,G,T\}^{64}$.  Positive examples contain the declared motif
+$m=\texttt{CGCG}$, whereas negative examples contain the cyclic decoy
+$d=\texttt{GCGC}$.  Since $m$ and $d$ have the same multiset of nucleotides,
+the inserted composition is matched while local order differs.  The dataset is
+balanced with 400 examples for each of eight deterministic seeds.
+
+\section{Representations and classifier}
+The conventional representations are base frequencies, dinucleotide
+frequencies, and positional one-hot encoding.  The experimental alternatives
+are the full orbital summary, its phase-only ablation, and its class-only
+ablation.  Every representation is evaluated using the same standardized
+nearest-centroid classifier and stratified train/test indices.
+
+For a test set with class recalls $r_0$ and $r_1$, balanced accuracy is
+\begin{equation}
+  \operatorname{BA}=\frac{r_0+r_1}{2}.
+  \label{eq:balanced-accuracy}
+\end{equation}
+The reported intervals are deterministic percentile-bootstrap intervals for
+the across-seed mean of Eq.~\eqref{eq:balanced-accuracy}.
+
+\section{Controls}
+The label-permutation null breaks the relation between training labels and
+representations.  The sequence-shuffle null preserves exact nucleotide
+composition within each sequence while destroying order.  These controls are
+run with the same splits and metrics as the observed-label condition.
+
+\section{Observed-label results}
+\begin{table}[ht]
+\centering
+\caption{Mean balanced accuracy over eight seeds.}
+\label{tab:results}
+\begin{tabular}{lcc}
+\toprule
+Representation & Mean BA & 95\% bootstrap CI \\
+\midrule
+Dinucleotide frequency & 0.6354 & [0.6188, 0.6490] \\
+Orbital classes only & 0.5375 & [0.5146, 0.5563] \\
+Orbital full & 0.5365 & [0.5188, 0.5583] \\
+Orbital phase only & 0.5354 & [0.5167, 0.5594] \\
+Positional one-hot & 0.5312 & [0.5094, 0.5531] \\
+Base frequency & 0.5250 & [0.5010, 0.5479] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The dinucleotide baseline exceeds the full orbital summary by approximately
+0.099 balanced accuracy units.  The orbital ablations remain close to the full
+summary, so this experiment supplies no evidence that the current combination
+of orbital channels adds useful order information for the declared task.
+
+\section{Epistemic boundary}
+Table~\ref{tab:results} is a synthetic software result.  It neither establishes
+nor refutes a biological mechanism.  It does block the narrower claim that the
+current fixed-size orbital summary already outperforms conventional
+sequence-order features on this benchmark.  Negative and neutral evidence is
+retained as part of the append-only project record.
+
+\end{document}
