@@ -46,3 +46,9 @@ Equal dimension is not treated as proof of equal information content or equal ef
 The first isolated full-suite run of the preregistered v0.5 head produced 65 passes and one failed test. The benchmark implementation did not fail. The test incorrectly required summaries written under different output basenames (`first.json` and `second.json`) to be byte-identical even though each summary intentionally records its own archive filename.
 
 Before executing the full v0.5 benchmark, the test was corrected to write the same basename in separate directories and to compare the resulting full JSON, deterministic gzip archive, summary and paired-comparison artifact. The corrected isolated regression passed 66 of 66 tests. No budget, projection seed, task, split, classifier, metric or primary estimand was changed.
+
+## NOTE-0008 — 2026-07-15 — pre-result execution-efficiency correction
+
+The first full v0.5 benchmark attempt exceeded the execution window before producing any artifact. Inspection showed redundant implementation work: every projected representation repeatedly converted and validated the same fixed matrix for every sequence, while the same raw orbital and tetranucleotide vectors were recomputed independently for each dimension budget.
+
+Before any v0.5 result was observed, matrix validation was moved to construction time and source vectors were shared through deterministic in-memory caches. The Rademacher matrices, projection seeds, dimensions, data, splits, classifier, metrics and estimand remain unchanged. A smoke run retained 66 of 66 passing tests and completed normally.
