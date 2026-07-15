@@ -4,39 +4,40 @@ A reproducible research scaffold for testing information-theoretic representatio
 
 ## Status
 
-Version `0.5.0` is a **dimension-matched synthetic benchmark**, not a claim that DNA has been decrypted. It provides:
+Version `0.6.0` is a **projection-seed sensitivity diagnostic with a null-bias block**, not a claim that DNA has been decrypted. It provides:
 
 - strict DNA normalization, reversible 2-bit encoding and deterministic mutation simulation;
 - an experimental orbital/atomic map with explicit complement symmetries;
-- frozen v0.3 and v0.4 benchmarks with negative and partially supportive results retained;
+- frozen v0.3-v0.5 benchmarks with negative, mixed and partially supportive results retained;
 - local orbital tensors and conventional k-mer controls;
-- a preregistered equal-output-dimension capacity proxy at 12, 24 and 48 dimensions;
-- deterministic label-blind Rademacher projections, identical held-out splits and paired confidence intervals;
+- equal-output-dimension comparisons at 12, 24 and 48 dimensions;
+- an explicitly disclosed 16-seed exploratory pilot;
+- an independent 32-projection-seed confirmation with hierarchical bootstrap intervals;
 - observed-label, label-permutation and sequence-shuffle conditions;
 - append-only change logs, append-only legacy notes and clean LaTeX reports.
 
 ## Current controlled result
 
-V0.5 compresses the 48-dimensional orbital multilag tensor and the 256-dimensional tetranucleotide vector independently through the same declared random-projection family. Equal dimension is only a capacity proxy; it does not equalize information content.
+The paired contrast is `projected tetranucleotide - projected orbital` balanced accuracy. Positive values favour projected 4-mer features.
 
-| Representation | Output dimension | Mean balanced accuracy | 95% bootstrap CI |
-|---|---:|---:|---:|
-| Tetranucleotide raw anchor | 256 | 0.8521 | [0.8344, 0.8698] |
-| Tetranucleotide projected | 24 | 0.7198 | [0.6865, 0.7531] |
-| Tetranucleotide projected | 48 | 0.7115 | [0.6906, 0.7323] |
-| Orbital multilag raw anchor | 48 | 0.6771 | [0.6562, 0.7021] |
-| Orbital projected | 24 | 0.6677 | [0.6396, 0.6958] |
-| Orbital projected | 12 | 0.6646 | [0.6385, 0.6896] |
-| Orbital projected | 48 | 0.6542 | [0.6177, 0.6844] |
-| Tetranucleotide projected | 12 | 0.5479 | [0.5156, 0.5823] |
+### Independent observed-label confirmation
 
-The preregistered paired estimand is `projected tetranucleotide - projected orbital`:
+| Output dimension | Mean difference | Hierarchical 95% CI | Positive projection seeds | Preregistered observed gate |
+|---:|---:|---:|---:|---|
+| 12 | +0.0233 | [0.0046, 0.0425] | 68.75% | unresolved: sign agreement below 75% |
+| 24 | +0.0444 | [0.0301, 0.0590] | 84.38% | observed 4-mer advantage |
+| 48 | +0.0775 | [0.0645, 0.0908] | 100.00% | observed 4-mer advantage |
 
-- 12 dimensions: `-0.1167`, CI `[-0.1552, -0.0823]`;
-- 24 dimensions: `+0.0521`, CI `[0.0042, 0.1000]`;
-- 48 dimensions: `+0.0573`, CI `[0.0260, 0.0885]`.
+### Null gate
 
-Thus the result is budget-dependent. The orbital representation is stronger after severe compression to 12 dimensions, while projected 4-mer features are modestly stronger at 24 and 48 dimensions. This is not general superiority for either family: the comparison uses one preregistered projection seed, and equal output dimension does not imply equal retained information. All label-permutation and sequence-shuffle aggregates remain near chance.
+The substantive promotion gate **fails**:
+
+- label-permutation null excludes zero at 24 and 48 dimensions;
+- sequence-shuffle null excludes zero at 12, 24 and 48 dimensions.
+
+Therefore the observed-label advantages at 24 and 48 dimensions are reproducible but are not promoted as clean representation effects. The overall verdict is `WARN_REVIEW_REQUIRED`: a null-calibrated and bias-corrected contrast must be preregistered next.
+
+The 16-seed pilot is retained separately because it was observed before repository preregistration. It is not pooled with the 32-seed confirmation.
 
 ## Quick start
 
@@ -46,20 +47,28 @@ pytest
 python scripts/run_controlled_benchmark.py
 python scripts/run_local_order_benchmark.py
 python scripts/run_dimension_matched_benchmark.py
+python scripts/run_projection_seed_sensitivity.py
 ```
 
-The runners write full JSON, deterministic gzip archives and compact summaries. V0.4 and v0.5 also write paired-comparison JSON.
+The runners write full JSON, deterministic gzip archives and compact summaries.
 
 ## Minimal example
 
 ```python
-from origins_dna import SyntheticMotifConfig, run_dimension_matched_benchmark
+from origins_dna import SyntheticMotifConfig, run_projection_seed_sensitivity
 
-report = run_dimension_matched_benchmark(
-    SyntheticMotifConfig(sample_count=40, sequence_length=24, seeds=(3, 5)),
-    budgets=(12, 24),
+report = run_projection_seed_sensitivity(
+    SyntheticMotifConfig(
+        sample_count=40,
+        sequence_length=24,
+        seeds=(3, 5),
+        bootstrap_resamples=50,
+    ),
+    budgets=(12,),
+    projection_seeds=(101, 202),
+    hierarchical_bootstrap_resamples=50,
 )
-assert report.benchmark_status == "synthetic_dimension_matched_capacity_proxy_result"
+assert report.benchmark_status == "synthetic_projection_seed_sensitivity_result"
 ```
 
 ## Research discipline
@@ -69,8 +78,8 @@ assert report.benchmark_status == "synthetic_dimension_matched_capacity_proxy_re
 3. `notes/LEGACY_NOTES.md` is append-only.
 4. Existing logs and notes are never deleted, reordered or silently rewritten.
 5. Comparisons use conventional controls, null models, ablations and identical held-out indices.
-6. Negative, neutral, mixed and partially supportive results are preserved plainly.
+6. Negative, neutral, mixed and blocked results are preserved plainly.
 7. A passing test or synthetic benchmark is not evidence of a biological mechanism.
 8. Code and LaTeX must satisfy `docs/DEVELOPMENT_POLICY.md`.
 
-See `docs/BENCHMARK_PROTOCOL.md` for v0.3, `docs/LOCAL_ORDER_PROTOCOL.md` for v0.4, `docs/DIMENSION_MATCHED_PROTOCOL.md` for v0.5, and the corresponding sources under `latex/`.
+See the protocols under `docs/`, including `PROJECTION_SEED_SENSITIVITY_PROTOCOL.md`, and the corresponding sources under `latex/`.
