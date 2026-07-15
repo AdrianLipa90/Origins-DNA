@@ -1,0 +1,58 @@
+name: v0.5 dimension-matched validation
+
+on:
+  push:
+    branches:
+      - research/origins-dna-v0.5-dimension-matched
+  pull_request:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - "latex/**"
+      - "pyproject.toml"
+      - ".github/workflows/v05-dimension-matched.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install package
+        run: python -m pip install -e ".[test]"
+      - name: Run tests
+        run: pytest -q
+      - name: Compile Python
+        run: python -m compileall -q src scripts
+      - name: Run v0.5 benchmark
+        run: |
+          mkdir -p artifacts
+          python scripts/run_dimension_matched_benchmark.py \
+            --output artifacts/v0.5_dimension_matched_benchmark.json
+      - name: Compile v0.5 LaTeX when present
+        run: |
+          if [ -f latex/dimension_matched_benchmark_note.tex ]; then
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends texlive-latex-base texlive-latex-recommended
+            mkdir -p artifacts/latex
+            pdflatex -interaction=nonstopmode -halt-on-error -output-directory=artifacts/latex latex/dimension_matched_benchmark_note.tex
+            pdflatex -interaction=nonstopmode -halt-on-error -output-directory=artifacts/latex latex/dimension_matched_benchmark_note.tex
+            ! grep -E "(LaTeX Warning|undefined references|Overfull|Underfull)" artifacts/latex/dimension_matched_benchmark_note.log
+          fi
+      - name: Upload deterministic benchmark artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: v05-dimension-matched-results
+          path: |
+            artifacts/v0.5_dimension_matched_benchmark.json
+            artifacts/v0.5_dimension_matched_benchmark.json.gz
+            artifacts/v0.5_dimension_matched_benchmark_summary.json
+            artifacts/v0.5_dimension_matched_benchmark_comparisons.json
+          if-no-files-found: error
