@@ -80,3 +80,9 @@ At 24 dimensions the mean was +0.0444 [0.0301, 0.0590] with 84.38% positive proj
 The substantive promotion gate nevertheless fails. The label-permutation null excludes zero at 24 and 48 dimensions, while the sequence-shuffle null excludes zero at 12, 24 and 48 dimensions. The observed advantages are reproducible software results, but they cannot be promoted as clean representation effects while representation-family differences remain present under null conditions. The overall verdict is `WARN_REVIEW_REQUIRED`, with `promotion_allowed=false`.
 
 The next gate is a separately preregistered exchangeable, null-calibrated and bias-corrected observed-minus-null contrast. Potential explanations such as finite-sample geometry, rejection-sampling effects or residual composition after shuffling remain hypotheses only. Biological dataset work and any DNA-decryption claim remain blocked.
+
+## NOTE-0012 — 2026-07-15 — direct validation for main
+
+The post-merge audit found that `main` contained the same file tree as the final validated v0.6 head, but the merge commit itself had no GitHub Actions run. The existing workflow triggered pushes only on `research/origins-dna-v0.5-dimension-matched`, so later merges into `main` were not independently checked.
+
+The workflow is generalized forward-only: pushes to `main`, `research/**` and `agent/**` are validated; pull-request path coverage includes source, tests, scripts, LaTeX, protocols, results, README and package metadata; and every LaTeX report is compiled twice and checked for warnings or layout defects. The historical merge graph is retained unchanged rather than rewritten.
