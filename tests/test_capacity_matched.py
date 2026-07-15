@@ -5,7 +5,7 @@ import sys
 
 import pytest
 
-from origins_dna.capacity_matched import (
+from origins_dna import (
     apply_projection,
     dimension_matched_comparison_summary,
     dimension_matched_representation_registry,
