@@ -28,6 +28,15 @@ Every comparative benchmark should:
 5. write a machine-readable result with reproducible configuration and checksum;
 6. distinguish synthetic software performance from biological evidence.
 
+## Frozen-regression gate
+
+When a later benchmark refactors shared infrastructure:
+
+1. earlier public registries, schemas and result semantics remain frozen;
+2. the earlier benchmark is rerun with its original filename and configuration;
+3. recorded SHA-256 values must remain byte-identical;
+4. any unavoidable incompatibility requires a new append-only correction record.
+
 ## Clean LaTeX gate
 
 Every LaTeX source should:

@@ -25,7 +25,36 @@ from .benchmark_types import (
 
 
 def run_controlled_benchmark(config: SyntheticMotifConfig) -> BenchmarkReport:
-    registry = representation_registry(config.sequence_length)
+    return run_registered_benchmark(
+        config,
+        representation_registry(config.sequence_length),
+        schema="origins-dna.benchmark.v1",
+        benchmark_status="synthetic_controlled_software_result",
+        interpretation_boundary=(
+            "Results quantify a synthetic software task only. They neither validate a biological "
+            "mechanism nor establish that DNA has been decrypted."
+        ),
+    )
+
+
+def run_registered_benchmark(
+    config: SyntheticMotifConfig,
+    registry: dict[str, Representation],
+    *,
+    schema: str,
+    benchmark_status: str,
+    interpretation_boundary: str,
+) -> BenchmarkReport:
+    """Execute one deterministic registry under shared splits and controls."""
+
+    if not registry:
+        raise ValueError("registry must not be empty")
+    if not schema.strip():
+        raise ValueError("schema must not be empty")
+    if not benchmark_status.strip():
+        raise ValueError("benchmark_status must not be empty")
+    if not interpretation_boundary.strip():
+        raise ValueError("interpretation_boundary must not be empty")
     results: list[SeedResult] = []
     for seed in config.seeds:
         dataset = generate_synthetic_motif_dataset(config, seed=seed)
@@ -75,16 +104,13 @@ def run_controlled_benchmark(config: SyntheticMotifConfig) -> BenchmarkReport:
             )
         )
     return BenchmarkReport(
-        schema="origins-dna.benchmark.v1",
-        benchmark_status="synthetic_controlled_software_result",
+        schema=schema,
+        benchmark_status=benchmark_status,
         config=config,
         representations=tuple(registry),
         seed_results=tuple(results),
         aggregate_results=_aggregate_results(results, config),
-        interpretation_boundary=(
-            "Results quantify a synthetic software task only. They neither validate a biological "
-            "mechanism nor establish that DNA has been decrypted."
-        ),
+        interpretation_boundary=interpretation_boundary,
     )
 
 
