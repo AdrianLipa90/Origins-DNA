@@ -1,0 +1,90 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage[margin=1in]{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{booktabs}
+
+\title{Origins-DNA v0.5: A Preregistered Dimension-Matched Capacity Proxy}
+\author{Adrian Lipa}
+\date{15 July 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We compare an orbital multilag representation of synthetic DNA sequences with tetranucleotide frequencies after independent, deterministic, label-blind random projections to equal output dimensions. The result is budget-dependent: the orbital family is stronger at 12 dimensions, whereas the projected tetranucleotide family is modestly stronger at 24 and 48 dimensions. This is a synthetic software benchmark and does not establish a biological mechanism, general representational superiority, or DNA decryption.
+\end{abstract}
+
+\section{Preregistered question}
+The v0.4 benchmark compared a 48-dimensional orbital tensor with a 256-dimensional tetranucleotide vector. V0.5 asks whether that advantage persists after controlling output dimension. Equal dimension is used only as a capacity proxy; it does not imply equal information content or equal effective statistical complexity.
+
+\section{Method}
+The task, eight seeds, stratified held-out splits, nearest-centroid classifier, feature standardization, balanced accuracy, Matthews correlation, label-permutation null, sequence-shuffle null, and bootstrap procedure are inherited unchanged from v0.4.
+
+For a source vector $x\in\mathbb{R}^{p}$ and budget $d\in\{12,24,48\}$, the projected representation is
+\begin{equation}
+ z = R x, \qquad R_{ij}\in\left\{-\frac{1}{\sqrt d},+\frac{1}{\sqrt d}\right\}.
+ \label{eq:projection}
+\end{equation}
+Matrices are generated deterministically from preregistered seeds without labels, split membership, motif position, or observed performance. The primary paired estimand at budget $d$ is
+\begin{equation}
+ \Delta_d = \operatorname{BA}_{4\text{-mer},d}-\operatorname{BA}_{\mathrm{orbital},d},
+ \label{eq:estimand}
+\end{equation}
+computed per seed on identical held-out examples.
+
+\section{Results}
+\begin{table}[tbp]
+\centering
+\caption{Observed-label balanced accuracy. Raw rows are diagnostic anchors and are not dimension-matched.}
+\label{tab:accuracy}
+\begin{tabular}{lrrr}
+\toprule
+Representation & Dimension & Mean BA & 95\% CI \\
+\midrule
+Tetranucleotide raw & 256 & 0.8521 & [0.8344, 0.8698] \\
+Tetranucleotide projected & 24 & 0.7198 & [0.6865, 0.7531] \\
+Tetranucleotide projected & 48 & 0.7115 & [0.6906, 0.7323] \\
+Orbital multilag raw & 48 & 0.6771 & [0.6562, 0.7021] \\
+Orbital projected & 24 & 0.6677 & [0.6396, 0.6958] \\
+Orbital projected & 12 & 0.6646 & [0.6385, 0.6896] \\
+Orbital projected & 48 & 0.6542 & [0.6177, 0.6844] \\
+Tetranucleotide projected & 12 & 0.5479 & [0.5156, 0.5823] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[tbp]
+\centering
+\caption{Paired differences defined by Equation~\eqref{eq:estimand}. Negative values favour the orbital projection.}
+\label{tab:paired}
+\begin{tabular}{rrr}
+\toprule
+Dimension & Mean $\Delta_d$ & 95\% CI \\
+\midrule
+12 & -0.1167 & [-0.1552, -0.0823] \\
+24 &  0.0521 & [ 0.0042,  0.1000] \\
+48 &  0.0573 & [ 0.0260,  0.0885] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The label-permutation and sequence-shuffle aggregates remain near chance across all representations. Two independent executions produced byte-identical JSON, gzip, summary, and paired-comparison artifacts.
+
+\section{Interpretation and limitations}
+Table~\ref{tab:paired} does not support one global winner. Severe compression to 12 dimensions favours the orbital source, while 24- and 48-dimensional projections favour tetranucleotide frequencies. A plausible software-level interpretation is that the two source representations lose different information under compression. This is not a biological conclusion.
+
+Only one preregistered projection seed was used. Independent matrices are drawn from the same family, but a later projection-seed sensitivity study is required before treating the budget pattern as stable. Moreover, equal output dimension does not equalize source entropy, sparsity, geometry, or retained task information. Biological evaluation additionally requires provenance-controlled data, family-aware splitting, leakage audits, and frozen preprocessing.
+
+\section{Reproducibility}
+The canonical uncompressed report SHA-256 is
+\begin{quote}\small\ttfamily
+ d62c6c130fc4186ef72d073a955efa3afb386f37ed98811bb75c8ef033c4ca3c
+\end{quote}
+The deterministic gzip SHA-256 is
+\begin{quote}\small\ttfamily
+ a62272a186b5dd31d0f09a85a28eaf52cd5b805013c3b399122a1fab210f724d
+\end{quote}
+
+\end{document}
