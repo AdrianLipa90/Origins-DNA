@@ -1,0 +1,68 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+
+\title{Origins-DNA v0.4: Local-Order Orbital Diagnostics}
+\author{Adrian Lipa}
+\date{15 July 2026}
+
+\newcommand{\R}{\mathbb{R}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The v0.3 global orbital summary underperformed a dinucleotide baseline on a controlled synthetic motif task. This note tests the narrower hypothesis that global averaging discarded useful local order. Ordered orbital outer-product tensors recover substantial signal but remain below a direct tetranucleotide control. The result is a software diagnostic, not evidence of a biological mechanism or DNA decryption.
+\end{abstract}
+
+\section{Local-order map}
+Let the orbital--atomic state at sequence position \(i\) be \(s_i\in\R^4\), with channels ordered as phase cosine, phase sine, ring class and bond class. For lag \(\ell\geq 1\), define
+\begin{equation}
+T^{(\ell)}_{ab}
+=\frac{1}{n-\ell}\sum_{i=1}^{n-\ell}s_{i,a}s_{i+\ell,b}.
+\label{eq:lag-tensor}
+\end{equation}
+The lag-1 map contains 16 components. Concatenating \(\ell\in\{1,2,3\}\) gives a 48-dimensional multilag map. Equation~\eqref{eq:lag-tensor} is directional and does not use labels or a task-specific motif template.
+
+\section{Protocol}
+The benchmark reuses the v0.3 balanced synthetic task: 400 length-64 sequences per seed, positive insertion CGCG, composition-matched decoy GCGC, eight fixed seeds, a 70\% stratified training split and a standardized nearest-centroid classifier. Observed labels, label permutation and within-sequence shuffling are evaluated on identical held-out indices.
+
+The conventional controls are 2-mer, 3-mer and 4-mer frequency vectors. Orbital ablations include the six-dimensional global summary, a lag-1 tensor, the full lags 1--3 tensor, and phase-only and class-only multilag tensors.
+
+\section{Observed-label results}
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrr}
+\toprule
+Representation & Dimension & Mean balanced accuracy \\
+\midrule
+Tetranucleotide frequency & 256 & 0.8521 \\
+Orbital multilag tensor & 48 & 0.6771 \\
+Trinucleotide frequency & 64 & 0.6469 \\
+Orbital multilag classes only & 12 & 0.6448 \\
+Dinucleotide frequency & 16 & 0.6354 \\
+Orbital pair tensor & 16 & 0.6219 \\
+Orbital multilag phase only & 12 & 0.5656 \\
+Orbital global summary & 6 & 0.5365 \\
+\bottomrule
+\end{tabular}
+\caption{Observed-label performance averaged over eight seeds.}
+\label{tab:observed}
+\end{table}
+
+The full multilag tensor exceeded the global summary by 0.1406 with a paired 95\% bootstrap interval of [0.1021, 0.1771]. It exceeded the dinucleotide baseline by 0.0417 [0.0188, 0.0667]. Its difference from the trinucleotide baseline was 0.0302 [-0.0010, 0.0646], which does not cleanly exclude zero. The tetranucleotide baseline exceeded the multilag tensor by 0.1750 [0.1479, 0.1969].
+
+\section{Ablation and null interpretation}
+The full multilag tensor exceeded the phase-only ablation by 0.1115 [0.0812, 0.1396] and the class-only ablation by 0.0323 [0.0167, 0.0479]. This indicates that both channel families contributed under this synthetic task, with the class channels carrying more of the standalone signal.
+
+Label-permutation and sequence-shuffle conditions remained near chance. Thus, the observed improvement is consistent with retained local order rather than a generic classifier bias. This statement is restricted to the declared synthetic generator and evaluation pipeline.
+
+\section{Conclusion and boundary}
+Local-order retention explains part of the v0.3 failure: the 48-dimensional multilag orbital tensor materially improves over the six-dimensional global summary. It does not outperform the task-aligned 4-mer representation. Because the 4-mer vector is also higher-dimensional, the next appropriate comparison is capacity-matched and then biological-data validation with explicit provenance and leakage controls.
+
+No result in this note establishes a biological mechanism or a decryption of DNA.
+
+\end{document}

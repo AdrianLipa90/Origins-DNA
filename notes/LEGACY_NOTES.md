@@ -22,3 +22,11 @@ The result applies only to the declared synthetic task, classifier and summary m
 During the final v0.3 validation, direct execution of `python scripts/run_controlled_benchmark.py` failed when the package had not been installed in editable mode. The branch still pointed to v0.2 and no v0.3 commit had been published. The script was corrected to resolve the repository `src/` directory explicitly, and a subprocess regression test now verifies this exact invocation.
 
 This note preserves the failure as process evidence rather than presenting the final passing state as if the defect had never existed.
+
+## NOTE-0004 — 2026-07-15 — local-order diagnostic result
+
+The v0.4 benchmark tested the explicit diagnosis that the v0.3 global orbital summary lost useful local order. The 48-dimensional lags 1--3 orbital tensor reached mean balanced accuracy 0.6771, compared with 0.5365 for the global orbital summary. The paired improvement was 0.1406 with a 95% bootstrap interval of [0.1021, 0.1771].
+
+The result is only partially supportive. The same orbital tensor exceeded the 2-mer baseline and was close to the 3-mer baseline, but the task-aligned 4-mer baseline reached 0.8521 and exceeded the orbital tensor by 0.1750 [0.1479, 0.1969]. This failure against 4-mer is retained without reinterpretation. The comparison is not capacity-matched because the 4-mer vector has 256 dimensions and the orbital multilag tensor has 48.
+
+The next scientifically useful gate is a capacity-matched comparison followed by a provenance-controlled biological dataset. No synthetic result is to be promoted as biological mechanism evidence.
