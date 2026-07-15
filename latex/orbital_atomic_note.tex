@@ -1,0 +1,57 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage[margin=1in]{geometry}
+\usepackage[hidelinks]{hyperref}
+
+\title{Origins-DNA v0.2: An Experimental Orbital--Atomic Feature Map}
+\author{Adrian Lipa}
+\date{15 July 2026}
+
+\newcommand{\DNA}{\mathcal{D}}
+\newcommand{\R}{\mathbb{R}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This note defines a deterministic feature map for DNA sequences. It is a software-level representation and does not assert a biological mechanism or a decryption of DNA.
+\end{abstract}
+
+\section{Definition}
+Let \(\DNA=\{A,C,G,T\}\). Assign phases
+\begin{equation}
+\theta(A)=0,\quad \theta(C)=\frac{\pi}{2},\quad
+\theta(T)=\pi,\quad \theta(G)=\frac{3\pi}{2}.
+\label{eq:phase-map}
+\end{equation}
+For each base \(b\in\DNA\), define
+\begin{equation}
+\Phi(b)=\bigl(\cos\theta(b),\sin\theta(b),r(b),h(b)\bigr)\in\R^4,
+\label{eq:feature-map}
+\end{equation}
+where \(r=+1\) for purines and \(-1\) for pyrimidines, while \(h=-1\) for A/T and \(+1\) for C/G.
+
+\section{Declared symmetry}
+For the Watson--Crick complement operator \(c\), the map satisfies
+\begin{equation}
+\Phi_{1:2}(c(b))=-\Phi_{1:2}(b),\qquad
+r(c(b))=-r(b),\qquad h(c(b))=h(b).
+\label{eq:complement-symmetry}
+\end{equation}
+Equation~\eqref{eq:complement-symmetry} is an imposed representation invariant, not an empirical biological result.
+
+\section{Local consolidation}
+For a window \(W=(b_1,\ldots,b_n)\), define mean phase components and coherence
+\begin{equation}
+\bar{x}=\frac{1}{n}\sum_{j=1}^n\cos\theta(b_j),\quad
+\bar{y}=\frac{1}{n}\sum_{j=1}^n\sin\theta(b_j),\quad
+R_W=\sqrt{\bar{x}^2+\bar{y}^2}.
+\label{eq:coherence}
+\end{equation}
+The implementation also records mean ring class, mean bond class and signed wrapped phase flow.
+
+\section{Validation boundary}
+The representation must be compared against one-hot, 2-bit and k-mer baselines under held-out evaluation, label permutation, sequence shuffling and component ablation. Software tests establish implementation correctness only.
+
+\end{document}
