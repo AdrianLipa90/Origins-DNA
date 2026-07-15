@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "origins-dna"
+version = "0.1.0"
+description = "Reproducible DNA encoding and simulation baseline"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name = "Adrian Lipa"}]
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+addopts = "-q"
