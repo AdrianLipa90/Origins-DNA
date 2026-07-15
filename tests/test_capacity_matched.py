@@ -102,10 +102,14 @@ def test_paired_summary_uses_identical_seed_pairs() -> None:
 
 def test_bundle_is_deterministic(tmp_path: Path) -> None:
     report = _small_report()
-    first = write_dimension_matched_bundle(report, tmp_path / "first.json")
-    second = write_dimension_matched_bundle(report, tmp_path / "second.json")
-    for left, right in zip(first, second):
-        assert left.read_bytes() == right.read_bytes()
+    first = write_dimension_matched_bundle(report, tmp_path / "first" / "report.json")
+    second = write_dimension_matched_bundle(report, tmp_path / "second" / "report.json")
+
+    assert first[0].read_bytes() == second[0].read_bytes()
+    assert first[1].read_bytes() == second[1].read_bytes()
+    assert first[2].read_bytes() == second[2].read_bytes()
+    assert first[3].read_bytes() == second[3].read_bytes()
+
     payload = json.loads(first[3].read_text(encoding="utf-8"))
     assert payload["schema"] == "origins-dna.dimension-matched-comparisons.v1"
 
