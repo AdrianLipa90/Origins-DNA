@@ -26,6 +26,22 @@ The repository retains deterministic machine-readable artifacts for each control
 - compact summary SHA-256: `abc9295bf9f4c07e126f702e9d076cc6104087a68ff942d31cdd72f6731e93d9`
 - paired comparisons SHA-256: `9ec6ca1189723efbe2e3f811164ea6b65170dab4dd3b0491d11269cc7c0af6aa`
 
-Independent executions at the validated source state produced byte-identical full JSON and gzip artifacts. The uncompressed full JSON files are generated locally but not retained in Git; the deterministic compressed archives contain every seed-level record.
+## v0.5 dimension-matched capacity proxy
+
+- summary: `v0.5_dimension_matched_benchmark_summary.json`
+- paired comparisons: `v0.5_dimension_matched_benchmark_comparisons.json`
+- complete deterministic archive: `v0.5_dimension_matched_benchmark.json.gz`
+- schema: `origins-dna.dimension-matched-benchmark.v1`
+- comparison schema: `origins-dna.dimension-matched-comparisons.v1`
+- generator: `scripts/run_dimension_matched_benchmark.py`
+- protocol: `docs/DIMENSION_MATCHED_PROTOCOL.md`
+- projection seed: `50501`
+- matched dimensions: `12, 24, 48`
+- uncompressed JSON SHA-256: `d62c6c130fc4186ef72d073a955efa3afb386f37ed98811bb75c8ef033c4ca3c`
+- deterministic gzip SHA-256: `a62272a186b5dd31d0f09a85a28eaf52cd5b805013c3b399122a1fab210f724d`
+- compact summary SHA-256: `614479f8e5b4da4de46f7cced1d04f8d9bde3ebb685fb49ac6b30b8d51d50ef1`
+- paired comparisons SHA-256: `c200c50407961d92257f7cb827c85d4ed7237a7a7cc36422920bcea720ec4104`
+
+Independent executions at each validated source state produced byte-identical full JSON and gzip artifacts. The uncompressed full JSON files are generated locally but not retained in Git; the deterministic compressed archives contain every seed-level record.
 
 These artifacts are synthetic software results, not biological evidence.
