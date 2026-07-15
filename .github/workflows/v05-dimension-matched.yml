@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Append sequence 13 and NOTE-0012
-        if: github.head_ref == 'agent/ci-main-validation-stage'
+        if: startsWith(github.head_ref, 'agent/ci-main-validation-stage')
         run: |
           python - <<'PY'
           from __future__ import annotations
@@ -89,7 +89,7 @@ The workflow is generalized forward-only: pushes to `main`, `research/**` and `a
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add logs/changes.jsonl notes/LEGACY_NOTES.md
           git commit -m "chore(ci): append main validation provenance"
-          git push origin HEAD:agent/ci-main-validation-stage
+          git push origin HEAD
       - name: Validate JSONL and Python sources
         run: |
           python - <<'PY'
