@@ -1,0 +1,85 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+
+\title{Origins-DNA v0.6: Independent Projection-Seed Sensitivity Confirmation}
+\author{Adrian Lipa}
+\date{15 July 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Version 0.6 tests whether the dimension-matched result from version 0.5 is stable across label-blind random projection seeds. A 16-seed pilot was observed before repository preregistration and is retained as exploratory evidence only. The confirmatory analysis uses 32 disjoint projection seeds fixed in the repository before execution. At 24 and 48 output dimensions the observed-label contrast favours projected tetranucleotide features, while 12 dimensions do not satisfy the preregistered sign-stability gate. Several null contrasts are also displaced from zero, so the observed result is blocked from substantive promotion pending a null-bias diagnostic.
+\end{abstract}
+
+\section{Chronology and scope}
+The contrast is projected tetranucleotide balanced accuracy minus projected orbital balanced accuracy. Positive values favour the tetranucleotide representation. The exploratory pilot used the original seed 50501 and 15 seeds derived from master seed 60601. Because that pilot preceded repository preregistration, it is not pooled with the confirmation.
+
+The independent confirmation uses 32 unique seeds derived from master seed 70701, excluding all pilot seeds. Data seeds, sequence generation, output budgets, train/test splits, the standardized nearest-centroid classifier, null conditions, and metrics remain frozen from version 0.5. Equal output dimension is only a capacity proxy; it does not equalize information content, geometry, sparsity, or effective statistical complexity.
+
+\section{Aggregation}
+For projection seed $p$, data seed $s$, and dimension budget $d$, define
+\begin{equation}
+  \Delta_{p,s,d}=\operatorname{BA}^{(4\mathrm{mer})}_{p,s,d}-\operatorname{BA}^{(orb)}_{p,s,d}.
+\end{equation}
+The reported mean averages all paired differences. The confidence interval uses a deterministic hierarchical bootstrap: projection seeds are resampled first, followed by data seeds within each selected projection. The preregistered stability gate additionally requires at least 75\% agreement in the sign of the projection-seed mean.
+
+\section{Observed-label confirmation}
+\begin{table}[htbp]
+\centering
+\begin{tabular}{rrrrr}
+\toprule
+Dimension & Mean $\Delta$ & 95\% interval & Positive seeds & Gate \\
+\midrule
+12 & 0.0233 & [0.0046, 0.0425] & 68.75\% & unresolved \\
+24 & 0.0444 & [0.0301, 0.0590] & 84.38\% & 4-mer observed gate \\
+48 & 0.0775 & [0.0645, 0.0908] & 100.00\% & 4-mer observed gate \\
+\bottomrule
+\end{tabular}
+\caption{Independent 32-projection-seed confirmation under observed labels.}
+\label{tab:observed}
+\end{table}
+
+The 12-dimensional mean is positive, but only 68.75\% of projection-seed means are positive. It therefore fails the preregistered 75\% sign-stability requirement. The 24- and 48-dimensional observed contrasts pass the observed-label gate.
+
+\section{Null diagnostics}
+\begin{table}[htbp]
+\centering
+\begin{tabular}{rrrr}
+\toprule
+Condition & Dimension & Mean $\Delta$ & 95\% interval \\
+\midrule
+Label permutation & 12 & -0.0144 & [-0.0304, 0.0015] \\
+Label permutation & 24 & -0.0246 & [-0.0394, -0.0101] \\
+Label permutation & 48 & -0.0157 & [-0.0291, -0.0019] \\
+Sequence shuffle & 12 & 0.0118 & [0.0021, 0.0214] \\
+Sequence shuffle & 24 & 0.0099 & [0.0005, 0.0194] \\
+Sequence shuffle & 48 & 0.0096 & [0.0010, 0.0181] \\
+\bottomrule
+\end{tabular}
+\caption{Projection-family differences under the preregistered null conditions.}
+\label{tab:nulls}
+\end{table}
+
+The label-permutation null is displaced below zero at 24 and 48 dimensions, while all three sequence-shuffle nulls are displaced slightly above zero. The protocol states that a non-zero null blocks substantive interpretation. Consequently, the observed-label advantage at 24 and 48 dimensions is not promoted as a clean representation effect.
+
+Possible causes include representation-dependent finite-sample geometry, rejection-sampling artifacts in the synthetic negative class, or residual composition effects after within-sequence shuffling. These are hypotheses, not established explanations.
+
+\section{Verdict and next gate}
+The software result is reproducible but methodologically blocked:
+\begin{itemize}
+  \item 12 dimensions: projection-sensitive or unresolved;
+  \item 24 and 48 dimensions: observed-label 4-mer advantage;
+  \item overall: review required because null differences are not centred at zero.
+\end{itemize}
+
+The next gate must preregister a null-calibrated contrast, including exchangeable label permutations and a bias-corrected observed-minus-null estimand. No biological dataset or DNA-decryption claim is promoted from this synthetic result.
+
+\section{Reproducibility boundary}
+The canonical result bundle records 32 projection seeds, eight data seeds, three dimensions, and all three conditions. Legacy logs and notes remain append-only. The exploratory pilot, the independent confirmation, and the null-bias block are all retained separately.
+
+\end{document}
