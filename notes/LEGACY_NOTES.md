@@ -62,3 +62,11 @@ At 24 dimensions, the projected tetranucleotide representation reached 0.7198 an
 No global winner is inferred. The pattern shows representation-specific information loss under one preregistered projection seed. Equal output dimension remains only a capacity proxy, and projection-seed sensitivity has not yet been tested. All label-permutation and sequence-shuffle aggregates remain near chance. Two independent executions produced byte-identical result bundles.
 
 Validation was performed in an isolated checkout reconstructed from the GitHub head: 66 tests passed, `compileall` passed, the direct script passed, and the LaTeX report compiled twice without warnings or layout defects. The new workflow did not produce an observable GitHub Actions run because it was not present in the stacked base branch; no CI PASS is claimed.
+
+## NOTE-0010 — 2026-07-15 — exploratory projection-seed pilot and independent confirmation freeze
+
+A 16-projection-seed sensitivity pilot was executed after its outline had been stated in chat but before the schedule was committed to the repository. It is therefore explicitly exploratory, not preregistered, and is excluded from the v0.6 confirmatory aggregates. The pilot used the original v0.5 seed `50501` and 15 seeds derived from master seed `60601`.
+
+The exploratory paired difference `projected 4-mer minus projected orbital` was approximately +0.0014 at 12 dimensions with hierarchical interval [-0.0229, +0.0238], +0.0467 at 24 dimensions with [+0.0270, +0.0650], and +0.0632 at 48 dimensions with [+0.0452, +0.0820]. These observations motivated a larger independent schedule but are not pooled with it.
+
+The confirmatory schedule is frozen before execution: 32 unique seeds derived from master seed `70701`, with all 16 pilot seeds excluded; budgets 12, 24 and 48; frozen v0.5 data seeds, task, splits, classifier, controls and metrics; and a hierarchical bootstrap that resamples projection seeds and data seeds. The full design and interpretation gates are recorded in `docs/PROJECTION_SEED_SENSITIVITY_PROTOCOL.md`. No confirmatory result had been executed when this note was appended.
