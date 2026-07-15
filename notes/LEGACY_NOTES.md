@@ -30,3 +30,7 @@ The v0.4 benchmark tested the explicit diagnosis that the v0.3 global orbital su
 The result is only partially supportive. The same orbital tensor exceeded the 2-mer baseline and was close to the 3-mer baseline, but the task-aligned 4-mer baseline reached 0.8521 and exceeded the orbital tensor by 0.1750 [0.1479, 0.1969]. This failure against 4-mer is retained without reinterpretation. The comparison is not capacity-matched because the 4-mer vector has 256 dimensions and the orbital multilag tensor has 48.
 
 The next scientifically useful gate is a capacity-matched comparison followed by a provenance-controlled biological dataset. No synthetic result is to be promoted as biological mechanism evidence.
+
+## NOTE-0005 — 2026-07-15 — GitHub blob transport correction
+
+Immediate readback of the first v0.4 branch commit showed corrupted bytes inside the GitHub blob for `logs/changes.jsonl` sequence 5, although the validated local source was valid. `main` was not affected and no pull request had been opened. A later corrective commit restores the intended sequence-5 record and appends sequence 6. The faulty commit remains in Git history; it is not rewritten or hidden.
