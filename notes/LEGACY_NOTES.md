@@ -52,3 +52,13 @@ Before executing the full v0.5 benchmark, the test was corrected to write the sa
 The first full v0.5 benchmark attempt exceeded the execution window before producing any artifact. Inspection showed redundant implementation work: every projected representation repeatedly converted and validated the same fixed matrix for every sequence, while the same raw orbital and tetranucleotide vectors were recomputed independently for each dimension budget.
 
 Before any v0.5 result was observed, matrix validation was moved to construction time and source vectors were shared through deterministic in-memory caches. The Rademacher matrices, projection seeds, dimensions, data, splits, classifier, metrics and estimand remain unchanged. A smoke run retained 66 of 66 passing tests and completed normally.
+
+## NOTE-0009 — 2026-07-15 — v0.5 dimension-matched result
+
+The preregistered result is budget-dependent. At 12 output dimensions, the orbital projection reached mean balanced accuracy 0.6646 while the projected tetranucleotide representation reached 0.5479. The paired tetranucleotide-minus-orbital difference was -0.1167 with a 95% interval of [-0.1552, -0.0823], favouring the orbital source under severe compression.
+
+At 24 dimensions, the projected tetranucleotide representation reached 0.7198 and the orbital projection reached 0.6677; the paired difference was +0.0521 [0.0042, 0.1000]. At 48 dimensions, tetranucleotide reached 0.7115 and orbital reached 0.6542; the paired difference was +0.0573 [0.0260, 0.0885]. The raw anchors remain 0.8521 for 256-dimensional tetranucleotide and 0.6771 for the 48-dimensional orbital tensor.
+
+No global winner is inferred. The pattern shows representation-specific information loss under one preregistered projection seed. Equal output dimension remains only a capacity proxy, and projection-seed sensitivity has not yet been tested. All label-permutation and sequence-shuffle aggregates remain near chance. Two independent executions produced byte-identical result bundles.
+
+Validation was performed in an isolated checkout reconstructed from the GitHub head: 66 tests passed, `compileall` passed, the direct script passed, and the LaTeX report compiled twice without warnings or layout defects. The new workflow did not produce an observable GitHub Actions run because it was not present in the stacked base branch; no CI PASS is claimed.
