@@ -1,6 +1,14 @@
 """Origins-DNA public API."""
 
 from .benchmark import (
+    DEFAULT_DIMENSION_BUDGETS,
+    apply_projection,
+    dimension_matched_comparison_summary,
+    dimension_matched_representation_registry,
+    make_signed_projection,
+    paired_dimension_difference,
+    run_dimension_matched_benchmark,
+    write_dimension_matched_bundle,
     AggregateResult,
     BenchmarkReport,
     ConfusionMatrix,
@@ -49,6 +57,14 @@ from .orbital_atomic import (
 from .simulation import MutationRecord, hamming_distance, mutate_substitutions
 
 __all__ = [
+    "DEFAULT_DIMENSION_BUDGETS",
+    "apply_projection",
+    "dimension_matched_comparison_summary",
+    "dimension_matched_representation_registry",
+    "make_signed_projection",
+    "paired_dimension_difference",
+    "run_dimension_matched_benchmark",
+    "write_dimension_matched_bundle",
     "AggregateResult",
     "BenchmarkReport",
     "ConfusionMatrix",
@@ -93,8 +109,10 @@ __all__ = [
     "representation_registry",
     "reverse_complement",
     "run_controlled_benchmark",
+    "run_dimension_matched_benchmark",
     "run_local_order_benchmark",
     "run_registered_benchmark",
+    "write_dimension_matched_bundle",
     "write_local_order_bundle",
     "sequence_sha256",
     "shannon_entropy_bits",
