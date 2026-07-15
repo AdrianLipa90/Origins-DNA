@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "origins-dna"
-version = "0.1.0"
-description = "Reproducible DNA encoding and simulation baseline"
+version = "0.2.0"
+description = "Reproducible DNA encoding, simulation and experimental representation scaffold"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{name = "Adrian Lipa"}]
