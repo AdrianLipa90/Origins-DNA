@@ -40,3 +40,9 @@ Immediate readback of the first v0.4 branch commit showed corrupted bytes inside
 V0.5 predeclares a dimension-matched capacity proxy before observing its results. Orbital multilag tensors and tetranucleotide frequencies are projected independently through the same label-blind Rademacher projection family at output dimensions 12, 24 and 48, while the v0.4 task, splits, classifier, controls and metrics remain frozen.
 
 Equal dimension is not treated as proof of equal information content or equal effective model capacity. Raw 48-dimensional orbital and raw 256-dimensional tetranucleotide representations remain diagnostic anchors only. Result interpretation will be appended after CI execution and will be retained whether favourable, neutral or unfavourable.
+
+## NOTE-0007 — 2026-07-15 — pre-result deterministic-bundle test correction
+
+The first isolated full-suite run of the preregistered v0.5 head produced 65 passes and one failed test. The benchmark implementation did not fail. The test incorrectly required summaries written under different output basenames (`first.json` and `second.json`) to be byte-identical even though each summary intentionally records its own archive filename.
+
+Before executing the full v0.5 benchmark, the test was corrected to write the same basename in separate directories and to compare the resulting full JSON, deterministic gzip archive, summary and paired-comparison artifact. The corrected isolated regression passed 66 of 66 tests. No budget, projection seed, task, split, classifier, metric or primary estimand was changed.
