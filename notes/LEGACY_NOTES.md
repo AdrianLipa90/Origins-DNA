@@ -34,3 +34,9 @@ The next scientifically useful gate is a capacity-matched comparison followed by
 ## NOTE-0005 — 2026-07-15 — GitHub blob transport correction
 
 Immediate readback of the first v0.4 branch commit showed corrupted bytes inside the GitHub blob for `logs/changes.jsonl` sequence 5, although the validated local source was valid. `main` was not affected and no pull request had been opened. A later corrective commit restores the intended sequence-5 record and appends sequence 6. The faulty commit remains in Git history; it is not rewritten or hidden.
+
+## NOTE-0006 — 2026-07-15 — v0.5 preregistration
+
+V0.5 predeclares a dimension-matched capacity proxy before observing its results. Orbital multilag tensors and tetranucleotide frequencies are projected independently through the same label-blind Rademacher projection family at output dimensions 12, 24 and 48, while the v0.4 task, splits, classifier, controls and metrics remain frozen.
+
+Equal dimension is not treated as proof of equal information content or equal effective model capacity. Raw 48-dimensional orbital and raw 256-dimensional tetranucleotide representations remain diagnostic anchors only. Result interpretation will be appended after CI execution and will be retained whether favourable, neutral or unfavourable.
