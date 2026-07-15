@@ -42,6 +42,26 @@ The repository retains deterministic machine-readable artifacts for each control
 - compact summary SHA-256: `614479f8e5b4da4de46f7cced1d04f8d9bde3ebb685fb49ac6b30b8d51d50ef1`
 - paired comparisons SHA-256: `c200c50407961d92257f7cb827c85d4ed7237a7a7cc36422920bcea720ec4104`
 
-Independent executions at each validated source state produced byte-identical full JSON and gzip artifacts. The uncompressed full JSON files are generated locally but not retained in Git; the deterministic compressed archives contain every seed-level record.
+## v0.6 independent projection-seed confirmation
+
+- summary: `v0.6_projection_seed_sensitivity_summary.json`
+- decision record: `v0.6_projection_seed_sensitivity_decision.json`
+- complete deterministic archive: `v0.6_projection_seed_sensitivity.json.gz`
+- schema: `origins-dna.projection-seed-sensitivity.v1`
+- decision schema: `origins-dna.projection-seed-sensitivity-decision.v1`
+- generator: `scripts/run_projection_seed_sensitivity.py`
+- protocol: `docs/PROJECTION_SEED_SENSITIVITY_PROTOCOL.md`
+- projection master seed: `70701`
+- independent projection seeds: `32`
+- excluded exploratory pilot seeds: `16`
+- matched dimensions: `12, 24, 48`
+- uncompressed JSON SHA-256: `feeb5350584d9328474faa7886017b197268f6ccb0655d908ffa1f88f2f9802c`
+- deterministic gzip SHA-256: `2e4710b9b2d05fe81157da40ad1a38dfe0a84ecca2d87543d50903defe5de4d4`
+- compact summary SHA-256: `dc27c033028b17ed50f517715b1e74b226dd5914248cbbc57818d583c329599c`
+- decision record SHA-256: `938f7ae53fbef40db022c008ec69c4eb66682ca2af9b7a982e7a098680f4dc00`
+- overall verdict: `WARN_REVIEW_REQUIRED`
+- promotion allowed: `false`, because preregistered null contrasts are displaced from zero
+
+Independent executions at each validated source state produced deterministic artifacts. The uncompressed full JSON files are generated locally but not retained in Git; the deterministic compressed archives contain every seed-level record.
 
 These artifacts are synthetic software results, not biological evidence.
