@@ -34,3 +34,49 @@ The next scientifically useful gate is a capacity-matched comparison followed by
 ## NOTE-0005 — 2026-07-15 — GitHub blob transport correction
 
 Immediate readback of the first v0.4 branch commit showed corrupted bytes inside the GitHub blob for `logs/changes.jsonl` sequence 5, although the validated local source was valid. `main` was not affected and no pull request had been opened. A later corrective commit restores the intended sequence-5 record and appends sequence 6. The faulty commit remains in Git history; it is not rewritten or hidden.
+
+## NOTE-0006 — 2026-07-15 — v0.5 preregistration
+
+V0.5 predeclares a dimension-matched capacity proxy before observing its results. Orbital multilag tensors and tetranucleotide frequencies are projected independently through the same label-blind Rademacher projection family at output dimensions 12, 24 and 48, while the v0.4 task, splits, classifier, controls and metrics remain frozen.
+
+Equal dimension is not treated as proof of equal information content or equal effective model capacity. Raw 48-dimensional orbital and raw 256-dimensional tetranucleotide representations remain diagnostic anchors only. Result interpretation will be appended after CI execution and will be retained whether favourable, neutral or unfavourable.
+
+## NOTE-0007 — 2026-07-15 — pre-result deterministic-bundle test correction
+
+The first isolated full-suite run of the preregistered v0.5 head produced 65 passes and one failed test. The benchmark implementation did not fail. The test incorrectly required summaries written under different output basenames (`first.json` and `second.json`) to be byte-identical even though each summary intentionally records its own archive filename.
+
+Before executing the full v0.5 benchmark, the test was corrected to write the same basename in separate directories and to compare the resulting full JSON, deterministic gzip archive, summary and paired-comparison artifact. The corrected isolated regression passed 66 of 66 tests. No budget, projection seed, task, split, classifier, metric or primary estimand was changed.
+
+## NOTE-0008 — 2026-07-15 — pre-result execution-efficiency correction
+
+The first full v0.5 benchmark attempt exceeded the execution window before producing any artifact. Inspection showed redundant implementation work: every projected representation repeatedly converted and validated the same fixed matrix for every sequence, while the same raw orbital and tetranucleotide vectors were recomputed independently for each dimension budget.
+
+Before any v0.5 result was observed, matrix validation was moved to construction time and source vectors were shared through deterministic in-memory caches. The Rademacher matrices, projection seeds, dimensions, data, splits, classifier, metrics and estimand remain unchanged. A smoke run retained 66 of 66 passing tests and completed normally.
+
+## NOTE-0009 — 2026-07-15 — v0.5 dimension-matched result
+
+The preregistered result is budget-dependent. At 12 output dimensions, the orbital projection reached mean balanced accuracy 0.6646 while the projected tetranucleotide representation reached 0.5479. The paired tetranucleotide-minus-orbital difference was -0.1167 with a 95% interval of [-0.1552, -0.0823], favouring the orbital source under severe compression.
+
+At 24 dimensions, the projected tetranucleotide representation reached 0.7198 and the orbital projection reached 0.6677; the paired difference was +0.0521 [0.0042, 0.1000]. At 48 dimensions, tetranucleotide reached 0.7115 and orbital reached 0.6542; the paired difference was +0.0573 [0.0260, 0.0885]. The raw anchors remain 0.8521 for 256-dimensional tetranucleotide and 0.6771 for the 48-dimensional orbital tensor.
+
+No global winner is inferred. The pattern shows representation-specific information loss under one preregistered projection seed. Equal output dimension remains only a capacity proxy, and projection-seed sensitivity has not yet been tested. All label-permutation and sequence-shuffle aggregates remain near chance. Two independent executions produced byte-identical result bundles.
+
+Validation was performed in an isolated checkout reconstructed from the GitHub head: 66 tests passed, `compileall` passed, the direct script passed, and the LaTeX report compiled twice without warnings or layout defects. The new workflow did not produce an observable GitHub Actions run because it was not present in the stacked base branch; no CI PASS is claimed.
+
+## NOTE-0010 — 2026-07-15 — exploratory projection-seed pilot and independent confirmation freeze
+
+A 16-projection-seed sensitivity pilot was executed after its outline had been stated in chat but before the schedule was committed to the repository. It is therefore explicitly exploratory, not preregistered, and is excluded from the v0.6 confirmatory aggregates. The pilot used the original v0.5 seed `50501` and 15 seeds derived from master seed `60601`.
+
+The exploratory paired difference `projected 4-mer minus projected orbital` was approximately +0.0014 at 12 dimensions with hierarchical interval [-0.0229, +0.0238], +0.0467 at 24 dimensions with [+0.0270, +0.0650], and +0.0632 at 48 dimensions with [+0.0452, +0.0820]. These observations motivated a larger independent schedule but are not pooled with it.
+
+The confirmatory schedule is frozen before execution: 32 unique seeds derived from master seed `70701`, with all 16 pilot seeds excluded; budgets 12, 24 and 48; frozen v0.5 data seeds, task, splits, classifier, controls and metrics; and a hierarchical bootstrap that resamples projection seeds and data seeds. The full design and interpretation gates are recorded in `docs/PROJECTION_SEED_SENSITIVITY_PROTOCOL.md`. No confirmatory result had been executed when this note was appended.
+
+## NOTE-0011 — 2026-07-15 — independent confirmation result and null-bias block
+
+The independent 32-projection-seed confirmation found a positive observed-label contrast `projected 4-mer minus projected orbital` at every declared dimension. At 12 dimensions the mean was +0.0233 with hierarchical interval [0.0046, 0.0425], but only 68.75% of projection-seed means were positive, below the preregistered 75% sign-stability gate. The 12-dimensional result is therefore projection-sensitive or unresolved.
+
+At 24 dimensions the mean was +0.0444 [0.0301, 0.0590] with 84.38% positive projection seeds. At 48 dimensions the mean was +0.0775 [0.0645, 0.0908] with 100% positive projection seeds. These two observed-label comparisons pass the preregistered observed gate for a 4-mer advantage.
+
+The substantive promotion gate nevertheless fails. The label-permutation null excludes zero at 24 and 48 dimensions, while the sequence-shuffle null excludes zero at 12, 24 and 48 dimensions. The observed advantages are reproducible software results, but they cannot be promoted as clean representation effects while representation-family differences remain present under null conditions. The overall verdict is `WARN_REVIEW_REQUIRED`, with `promotion_allowed=false`.
+
+The next gate is a separately preregistered exchangeable, null-calibrated and bias-corrected observed-minus-null contrast. Potential explanations such as finite-sample geometry, rejection-sampling effects or residual composition after shuffling remain hypotheses only. Biological dataset work and any DNA-decryption claim remain blocked.

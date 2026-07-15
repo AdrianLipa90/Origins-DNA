@@ -1,5 +1,27 @@
 """Public facade for controlled Origins-DNA benchmarks."""
 
+from .capacity_matched import (
+    DEFAULT_DIMENSION_BUDGETS,
+    apply_projection,
+    dimension_matched_comparison_summary,
+    dimension_matched_representation_registry,
+    make_signed_projection,
+    paired_dimension_difference,
+    run_dimension_matched_benchmark,
+    write_dimension_matched_bundle,
+)
+from .projection_sensitivity import (
+    DEFAULT_HIERARCHICAL_BOOTSTRAP_RESAMPLES,
+    DEFAULT_PROJECTION_MASTER_SEED,
+    DEFAULT_PROJECTION_SEED_COUNT,
+    EXPLORATORY_PILOT_PROJECTION_SEEDS,
+    ProjectionSeedResult,
+    ProjectionSensitivityAggregate,
+    ProjectionSensitivityReport,
+    hierarchical_bootstrap_confidence_interval,
+    projection_seed_schedule,
+    run_projection_seed_sensitivity,
+)
 from .benchmark_data import (
     generate_synthetic_motif_dataset,
     permute_labels,
@@ -45,6 +67,24 @@ from .benchmark_types import (
 )
 
 __all__ = [
+    "DEFAULT_DIMENSION_BUDGETS",
+    "DEFAULT_HIERARCHICAL_BOOTSTRAP_RESAMPLES",
+    "DEFAULT_PROJECTION_MASTER_SEED",
+    "DEFAULT_PROJECTION_SEED_COUNT",
+    "EXPLORATORY_PILOT_PROJECTION_SEEDS",
+    "ProjectionSeedResult",
+    "ProjectionSensitivityAggregate",
+    "ProjectionSensitivityReport",
+    "apply_projection",
+    "dimension_matched_comparison_summary",
+    "dimension_matched_representation_registry",
+    "hierarchical_bootstrap_confidence_interval",
+    "make_signed_projection",
+    "paired_dimension_difference",
+    "projection_seed_schedule",
+    "run_dimension_matched_benchmark",
+    "run_projection_seed_sensitivity",
+    "write_dimension_matched_bundle",
     "AggregateResult",
     "BenchmarkReport",
     "ConfusionMatrix",

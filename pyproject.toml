@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "origins-dna"
-version = "0.4.0"
-description = "Reproducible DNA representations and local-order diagnostics"
+version = "0.6.0"
+description = "Reproducible DNA representations and projection-seed sensitivity diagnostics"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{name = "Adrian Lipa"}]
