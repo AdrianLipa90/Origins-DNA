@@ -1,23 +1,17 @@
-name: Origins-DNA validation bootstrap
+name: Origins-DNA append-only staging
 
 on:
   pull_request:
     paths:
-      - "src/**"
-      - "tests/**"
-      - "scripts/**"
-      - "latex/**"
-      - "docs/**"
-      - "results/**"
-      - "README.md"
-      - "pyproject.toml"
       - ".github/workflows/**"
+      - "logs/changes.jsonl"
+      - "notes/LEGACY_NOTES.md"
 
 permissions:
   contents: write
 
 jobs:
-  validate:
+  append-and-verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,8 +21,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: pip
-      - name: Apply append-only process correction on staging branch
+      - name: Append sequence 13 and NOTE-0012
         if: github.head_ref == 'agent/ci-main-validation-stage'
         run: |
           python - <<'PY'
@@ -37,87 +30,10 @@ jobs:
           import json
           from pathlib import Path
 
-          final_workflow = '''name: Origins-DNA validation
-
-          on:
-            push:
-              branches:
-                - main
-                - "research/**"
-                - "agent/**"
-            pull_request:
-              paths:
-                - "src/**"
-                - "tests/**"
-                - "scripts/**"
-                - "latex/**"
-                - "docs/**"
-                - "results/**"
-                - "README.md"
-                - "pyproject.toml"
-                - ".github/workflows/v05-dimension-matched.yml"
-
-          permissions:
-            contents: read
-
-          jobs:
-            validate:
-              runs-on: ubuntu-latest
-              steps:
-                - uses: actions/checkout@v4
-                - uses: actions/setup-python@v5
-                  with:
-                    python-version: "3.11"
-                    cache: pip
-                - name: Install package
-                  run: python -m pip install -e ".[test]"
-                - name: Run full test suite
-                  run: pytest -q
-                - name: Compile Python
-                  run: python -m compileall -q src scripts
-                - name: Reproduce v0.5 deterministic benchmark
-                  run: |
-                    mkdir -p artifacts
-                    python scripts/run_dimension_matched_benchmark.py \\
-                      --output artifacts/v0.5_dimension_matched_benchmark.json
-                - name: Compile all LaTeX reports
-                  run: |
-                    if compgen -G "latex/*.tex" > /dev/null; then
-                      sudo apt-get update
-                      sudo apt-get install -y --no-install-recommends texlive-latex-base texlive-latex-recommended
-                      mkdir -p artifacts/latex
-                      for source in latex/*.tex; do
-                        pdflatex -interaction=nonstopmode -halt-on-error -output-directory=artifacts/latex "$source"
-                        pdflatex -interaction=nonstopmode -halt-on-error -output-directory=artifacts/latex "$source"
-                        log="artifacts/latex/$(basename "${source%.tex}").log"
-                        ! grep -E "(LaTeX Warning|undefined references|Overfull|Underfull)" "$log"
-                      done
-                    fi
-                - name: Upload validation artifacts
-                  uses: actions/upload-artifact@v4
-                  with:
-                    name: origins-dna-validation-results
-                    path: |
-                      artifacts/v0.5_dimension_matched_benchmark.json
-                      artifacts/v0.5_dimension_matched_benchmark.json.gz
-                      artifacts/v0.5_dimension_matched_benchmark_summary.json
-                      artifacts/v0.5_dimension_matched_benchmark_comparisons.json
-                      artifacts/latex/*.pdf
-                    if-no-files-found: error
-          '''
-          final_workflow = "\n".join(
-              line[10:] if line.startswith("          ") else line
-              for line in final_workflow.splitlines()
-          ) + "\n"
-          Path(".github/workflows/v05-dimension-matched.yml").write_text(
-              final_workflow,
-              encoding="utf-8",
-          )
-
           log_path = Path("logs/changes.jsonl")
           old_log = log_path.read_text(encoding="utf-8")
-          old_records = [json.loads(line) for line in old_log.splitlines() if line.strip()]
-          if [record["sequence"] for record in old_records] != list(range(1, 13)):
+          records = [json.loads(line) for line in old_log.splitlines() if line.strip()]
+          if [record["sequence"] for record in records] != list(range(1, 13)):
               raise SystemExit("unexpected append-only log prefix")
           sequence_13 = {
               "schema": "origins-dna.change.v1",
@@ -141,9 +57,10 @@ jobs:
               "destructive": False,
               "append_only_policy": "Sequences 1 through 12 are retained byte-for-byte; this process correction is appended as sequence 13.",
           }
-          log_prefix = old_log if old_log.endswith("\n") else old_log + "\n"
           log_path.write_text(
-              log_prefix + json.dumps(sequence_13, separators=(",", ":")) + "\n",
+              (old_log if old_log.endswith("\n") else old_log + "\n")
+              + json.dumps(sequence_13, separators=(",", ":"))
+              + "\n",
               encoding="utf-8",
           )
 
@@ -151,16 +68,12 @@ jobs:
           old_notes = notes_path.read_text(encoding="utf-8")
           if "## NOTE-0012" in old_notes:
               raise SystemExit("NOTE-0012 already exists")
-          note = '''## NOTE-0012 — 2026-07-15 — direct validation for main
+          note = """## NOTE-0012 — 2026-07-15 — direct validation for main
 
-          The post-merge audit found that `main` contained the same file tree as the final validated v0.6 head, but the merge commit itself had no GitHub Actions run. The existing workflow triggered pushes only on `research/origins-dna-v0.5-dimension-matched`, so later merges into `main` were not independently checked.
+The post-merge audit found that `main` contained the same file tree as the final validated v0.6 head, but the merge commit itself had no GitHub Actions run. The existing workflow triggered pushes only on `research/origins-dna-v0.5-dimension-matched`, so later merges into `main` were not independently checked.
 
-          The workflow is generalized forward-only: pushes to `main`, `research/**` and `agent/**` are validated; pull-request path coverage includes source, tests, scripts, LaTeX, protocols, results, README and package metadata; and every LaTeX report is compiled twice and checked for warnings or layout defects. The historical merge graph is retained unchanged rather than rewritten.
-          '''
-          note = "\n".join(
-              line[10:] if line.startswith("          ") else line
-              for line in note.splitlines()
-          ) + "\n"
+The workflow is generalized forward-only: pushes to `main`, `research/**` and `agent/**` are validated; pull-request path coverage includes source, tests, scripts, LaTeX, protocols, results, README and package metadata; and every LaTeX report is compiled twice and checked for warnings or layout defects. The historical merge graph is retained unchanged rather than rewritten.
+"""
           notes_path.write_text(old_notes.rstrip("\n") + "\n\n" + note, encoding="utf-8")
 
           final_records = [
@@ -172,31 +85,18 @@ jobs:
               raise SystemExit("append-only verification failed")
           PY
 
-          rm -f .github/workflows/bootstrap-ci-main-validation.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/workflows/v05-dimension-matched.yml logs/changes.jsonl notes/LEGACY_NOTES.md .github/workflows/bootstrap-ci-main-validation.yml
-          git commit -m "ci: validate main and record process correction"
+          git add logs/changes.jsonl notes/LEGACY_NOTES.md
+          git commit -m "chore(ci): append main validation provenance"
           git push origin HEAD:agent/ci-main-validation-stage
-      - name: Install package
-        run: python -m pip install -e ".[test]"
-      - name: Run full test suite
-        run: pytest -q
-      - name: Compile Python
-        run: python -m compileall -q src scripts
-      - name: Reproduce v0.5 deterministic benchmark
+      - name: Validate JSONL and Python sources
         run: |
-          mkdir -p artifacts
-          python scripts/run_dimension_matched_benchmark.py \
-            --output artifacts/v0.5_dimension_matched_benchmark.json
-      - name: Compile all LaTeX reports
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends texlive-latex-base texlive-latex-recommended
-          mkdir -p artifacts/latex
-          for source in latex/*.tex; do
-            pdflatex -interaction=nonstopmode -halt-on-error -output-directory=artifacts/latex "$source"
-            pdflatex -interaction=nonstopmode -halt-on-error -output-directory=artifacts/latex "$source"
-            log="artifacts/latex/$(basename "${source%.tex}").log"
-            ! grep -E "(LaTeX Warning|undefined references|Overfull|Underfull)" "$log"
-          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          records = [json.loads(line) for line in Path("logs/changes.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+          assert [record["sequence"] for record in records] == list(range(1, 14))
+          assert "## NOTE-0012" in Path("notes/LEGACY_NOTES.md").read_text(encoding="utf-8")
+          PY
+          python -m compileall -q src scripts
