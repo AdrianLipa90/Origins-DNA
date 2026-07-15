@@ -1,3 +1,4 @@
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -140,3 +141,45 @@ def test_repository_script_runs_without_editable_install(tmp_path: Path) -> None
     assert output.exists()
     assert output.with_name(output.name + ".gz").exists()
     assert output.with_name(output.stem + "_summary.json").exists()
+
+
+def test_default_confirmatory_result_regression(tmp_path: Path) -> None:
+    report = run_projection_seed_sensitivity(
+        SyntheticMotifConfig(),
+        hierarchical_bootstrap_resamples=5_000,
+    )
+    observed = {
+        (result.condition, result.budget): result
+        for result in report.aggregate_results
+    }
+    expected = {
+        ("observed_labels", 12): (0.02333984375, 0.004589843750000008, 0.04248046874999998, 0.6875),
+        ("observed_labels", 24): (0.04440104166666666, 0.030078124999999997, 0.058984375, 0.84375),
+        ("observed_labels", 48): (0.07747395833333334, 0.064453125, 0.09075520833333334, 1.0),
+        ("label_permutation_null", 12): (-0.014388020833333341, -0.030371093750000005, 0.0014648437499999959, 0.3125),
+        ("label_permutation_null", 24): (-0.024641927083333338, -0.039355468750000004, -0.010058593750000002, 0.21875),
+        ("label_permutation_null", 48): (-0.015657552083333335, -0.02910156250000001, -0.0018880208333333338, 0.25),
+        ("sequence_shuffle_null", 12): (0.01181640625, 0.00208333333333333, 0.021354166666666657, 0.71875),
+        ("sequence_shuffle_null", 24): (0.009863281250000001, 0.0005208333333333367, 0.01936848958333334, 0.65625),
+        ("sequence_shuffle_null", 48): (0.009570312499999997, 0.0009765625000000028, 0.018098958333333335, 0.71875),
+    }
+    assert set(observed) == set(expected)
+    for key, (mean, low, high, positive_fraction) in expected.items():
+        result = observed[key]
+        assert result.mean_balanced_accuracy_difference == pytest.approx(mean, abs=1e-15)
+        assert result.hierarchical_ci_low == pytest.approx(low, abs=1e-15)
+        assert result.hierarchical_ci_high == pytest.approx(high, abs=1e-15)
+        assert result.fraction_projection_means_positive == positive_fraction
+
+    full_json, archive, summary = report.write_bundle(
+        tmp_path / "v0.6_projection_seed_sensitivity.json"
+    )
+    assert hashlib.sha256(full_json.read_bytes()).hexdigest() == (
+        "feeb5350584d9328474faa7886017b197268f6ccb0655d908ffa1f88f2f9802c"
+    )
+    assert hashlib.sha256(archive.read_bytes()).hexdigest() == (
+        "2e4710b9b2d05fe81157da40ad1a38dfe0a84ecca2d87543d50903defe5de4d4"
+    )
+    assert hashlib.sha256(summary.read_bytes()).hexdigest() == (
+        "dc27c033028b17ed50f517715b1e74b226dd5914248cbbc57818d583c329599c"
+    )
