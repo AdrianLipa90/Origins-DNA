@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - research/origins-dna-v0.7-null-calibrated-contrast
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
