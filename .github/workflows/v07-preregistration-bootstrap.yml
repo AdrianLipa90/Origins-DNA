@@ -91,7 +91,7 @@ jobs:
               "result_status": "not_observed_at_preregistration",
               "provenance": "Implemented by ChatGPT under Adrian Lipa's instruction to continue after repository cleanup; materialized on GitHub before default result execution.",
               "epistemic_status": "independent_seed_preregistered_synthetic_null_calibration_pending_result",
-              "destructive": false,
+              "destructive": False,
               "append_only_policy": "Sequences 1 through 14 are retained byte-for-byte; results and corrections must be appended later."
           }
           lines = log_path.read_text(encoding="utf-8").splitlines()
