@@ -22,7 +22,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends texlive-latex-base texlive-latex-recommended
-      - name: Compile deterministic preregistration PDF
+      - name: Compile preregistration PDF
         env:
           SOURCE_DATE_EPOCH: "1784160000"
           FORCE_SOURCE_DATE: "1"
@@ -33,16 +33,20 @@ jobs:
           pdflatex -interaction=nonstopmode -halt-on-error null_calibrated_contrast_preregistration.tex
           ! grep -E "(LaTeX Warning|undefined references|Overfull|Underfull)" null_calibrated_contrast_preregistration.log
           test "$(sha256sum null_calibrated_contrast_preregistration.tex | cut -d' ' -f1)" = "f403a1ba2608a501d635baad9a0aa7f6adc0fa042503f2abfa8102647b3a1559"
-          test "$(sha256sum null_calibrated_contrast_preregistration.pdf | cut -d' ' -f1)" = "61178932cbf39fb053a36a0db6bf52cde9ce18e7bfd391dd004898ff2dfc0c00"
+          test -s null_calibrated_contrast_preregistration.pdf
+          pdfinfo null_calibrated_contrast_preregistration.pdf | grep -q "Pages:[[:space:]]*3"
       - name: Append LaTeX/PDF provenance
         run: |
           python - <<'PY'
+          import hashlib
           import json
           from pathlib import Path
           import subprocess
 
           log_path = Path("logs/changes.jsonl")
           note_path = Path("notes/LEGACY_NOTES.md")
+          pdf_path = Path("latex/null_calibrated_contrast_preregistration.pdf")
+          pdf_sha = hashlib.sha256(pdf_path.read_bytes()).hexdigest()
           head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
           record = {
               "schema": "origins-dna.change.v1",
@@ -50,7 +54,7 @@ jobs:
               "date": "2026-07-16",
               "branch": "research/origins-dna-v0.7-null-calibrated-contrast",
               "parent_commit": head,
-              "change_type": "clean_latex_and_deterministic_pdf_preregistration_report",
+              "change_type": "clean_latex_and_compiled_pdf_preregistration_report",
               "scope": [
                   "latex/null_calibrated_contrast_preregistration.tex",
                   "latex/null_calibrated_contrast_preregistration.pdf",
@@ -64,12 +68,15 @@ jobs:
                   "latex_passes": 2,
                   "latex_warnings": 0,
                   "latex_layout_defects": 0,
+                  "pdf_pages": 3,
                   "rendered_pages_checked_locally": 3,
                   "tex_sha256": "f403a1ba2608a501d635baad9a0aa7f6adc0fa042503f2abfa8102647b3a1559",
-                  "pdf_sha256": "61178932cbf39fb053a36a0db6bf52cde9ce18e7bfd391dd004898ff2dfc0c00",
-                  "deterministic_source_date_epoch": 1784160000
+                  "github_compiled_pdf_sha256": pdf_sha,
+                  "local_reference_pdf_sha256": "61178932cbf39fb053a36a0db6bf52cde9ce18e7bfd391dd004898ff2dfc0c00",
+                  "deterministic_source_date_epoch": 1784160000,
+                  "cross_tex_distribution_binary_identity_required": False
               },
-              "provenance": "LaTeX authored and locally rendered by ChatGPT; deterministic PDF independently compiled and hash-verified by GitHub Actions before commit.",
+              "provenance": "LaTeX authored and locally rendered by ChatGPT; PDF independently compiled and hash-recorded by GitHub Actions before commit.",
               "epistemic_status": "verified_preregistration_documentation_only",
               "destructive": False,
               "append_only_policy": "Sequences 1 through 15 are retained byte-for-byte; this documentation correction is appended as sequence 16."
@@ -79,17 +86,18 @@ jobs:
               with log_path.open("a", encoding="utf-8", newline="") as stream:
                   stream.write(json.dumps(record, separators=(",", ":"), ensure_ascii=False) + "\n")
 
-          heading = "## NOTE-0015 — 2026-07-16 — v0.7 clean LaTeX and deterministic PDF"
+          heading = "## NOTE-0015 — 2026-07-16 — v0.7 clean LaTeX and compiled PDF"
           note = (
               "\n\n" + heading + "\n\n"
               "The first frozen v0.7 preregistration state contained the Markdown protocol, code, tests and append-only "
               "records but omitted the corresponding reviewable LaTeX source and compiled PDF. The omission was "
               "identified before execution of the default v0.7 result.\n\n"
-              "`latex/null_calibrated_contrast_preregistration.tex` now records the frozen schedules, estimands, "
-              "uncertainty procedures, decision rule, control diagnostics and epistemic boundary. It compiles twice "
-              "without warnings or layout defects. The three rendered pages were inspected locally for clipping, overlap "
-              "and broken glyphs. The committed PDF is reproducible under `SOURCE_DATE_EPOCH=1784160000` and has "
-              "SHA-256 `61178932cbf39fb053a36a0db6bf52cde9ce18e7bfd391dd004898ff2dfc0c00`. No v0.7 result was executed or interpreted during this correction.\n"
+              "`latex/null_calibrated_contrast_preregistration.tex` records the frozen schedules, estimands, uncertainty "
+              "procedures, decision rule, control diagnostics and epistemic boundary. It compiles twice without warnings "
+              "or layout defects. The three locally rendered pages were inspected for clipping, overlap and broken glyphs. "
+              "The GitHub-compiled PDF SHA-256 is `" + pdf_sha + "`. A local reference compilation used the same source "
+              "and `SOURCE_DATE_EPOCH=1784160000`; binary identity across different TeX distributions is not required. "
+              "No v0.7 result was executed or interpreted during this correction.\n"
           )
           existing = note_path.read_text(encoding="utf-8")
           if heading not in existing:
@@ -104,6 +112,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "LaTeX/PDF provenance already materialized"
           else
-            git commit -m "docs: add deterministic v0.7 preregistration PDF"
+            git commit -m "docs: add compiled v0.7 preregistration PDF"
             git push origin HEAD:research/origins-dna-v0.7-null-calibrated-contrast
           fi
