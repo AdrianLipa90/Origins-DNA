@@ -86,3 +86,10 @@ The next gate is a separately preregistered exchangeable, null-calibrated and bi
 The post-merge audit found that `main` contained the same file tree as the final validated v0.6 head, but the merge commit itself had no GitHub Actions run. The existing workflow triggered pushes only on `research/origins-dna-v0.5-dimension-matched`, so later merges into `main` were not independently checked.
 
 The workflow is generalized forward-only: pushes to `main`, `research/**` and `agent/**` are validated; pull-request path coverage includes source, tests, scripts, LaTeX, protocols, results, README and package metadata; and every LaTeX report is compiled twice and checked for warnings or layout defects. The historical merge graph is retained unchanged rather than rewritten.
+
+
+## NOTE-0013 — 2026-07-16 — accidental staging merge cleanup
+
+While work on v0.7 was beginning, PR #18 merged a temporary staging branch into `main`. That merge added `.github/workflows/bootstrap-ci-main-validation.yml` and replaced the validated read-only validation workflow with a staging variant using `contents: write` and an explicit head-ref checkout. PRs #19–#22 then merged `main` and helper branches in both directions, making the graph noisier.
+
+A direct tree comparison against the clean PR-17 merge found no changes to source code, tests, scientific results, package version, `logs/changes.jsonl` or prior legacy notes. The contamination is limited to the two workflow files. The correction removes the bootstrap workflow and restores the exact validated workflow forward-only. Existing merge commits remain immutable process evidence; no force-push or history rewrite is used.
