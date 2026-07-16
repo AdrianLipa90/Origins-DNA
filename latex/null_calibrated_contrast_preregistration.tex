@@ -1,0 +1,99 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage[hidelinks]{hyperref}
+
+\title{Origins-DNA v0.7: Independent Null-Calibrated Contrast Preregistration}
+\author{Adrian Lipa}
+\date{16 July 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Version 0.7 preregisters an independent-seed analysis intended to diagnose the non-zero representation-family contrasts observed under the v0.6 null controls. The analysis preserves label-permutation and sequence-shuffle nulls as separate estimands and calibrates the observed contrast against each null without pooling or post hoc selection. Projection and data seed schedules are disjoint from all prior v0.5 and v0.6 schedules. This document freezes the analysis before execution of the default v0.7 result. The work remains a synthetic software experiment and cannot establish a biological mechanism or DNA decryption.
+\end{abstract}
+
+\section{Chronology and scope}
+The aggregate v0.6 result is already known. Consequently, v0.7 is not described as a blind reinterpretation of the same random schedules. The default v0.7 projection and data seeds are independently derived and committed before execution. The preregistration is recorded in the append-only change log as sequence 15 and in the legacy notes as NOTE-0014.
+
+The following components remain frozen from v0.6: the balanced composition-matched synthetic motif task, sample count 400, sequence length 64, motif \texttt{CGCG}, train fraction 0.7, nearest-centroid classifier, balanced accuracy, output dimensions 12, 24 and 48, deterministic label-blind Rademacher projections, label-permutation control, and sequence-shuffle control.
+
+\section{Independent schedules}
+\begin{table}[htbp]
+\centering
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.30\textwidth}p{0.58\textwidth}}
+\toprule
+Item & Frozen value \\
+\midrule
+Projection master seed & 80801 \\
+Projection seed count & 32 unique seeds \\
+Projection exclusions & Every v0.5/v0.6 exploratory and confirmatory projection seed \\
+Data master seed & 90901 \\
+Data seed count & 8 unique seeds \\
+Data exclusions & 11, 23, 37, 41, 53, 67, 79 and 83 \\
+Hierarchical bootstrap & 5000 deterministic resamples \\
+Cluster sign-flip test & 20000 deterministic resamples \\
+Sign-stability threshold & 75\% of projection-seed means \\
+Significance level & 0.05, two-sided \\
+\bottomrule
+\end{tabular}
+\caption{Parameters frozen before execution of the default v0.7 result.}
+\label{tab:frozen}
+\end{table}
+
+\section{Primary estimands}
+For condition $c$, projection seed $p$, data seed $s$, and output dimension $d$, define the paired contrast
+\begin{equation}
+  \Delta_{p,s,d,c}
+  = \operatorname{BA}^{(4\mathrm{mer})}_{p,s,d,c}
+  - \operatorname{BA}^{(orb)}_{p,s,d,c}.
+  \label{eq:delta}
+\end{equation}
+Positive values favour the projected tetranucleotide representation; negative values favour the projected orbital representation.
+
+V0.7 preserves two distinct calibrated contrasts:
+\begin{align}
+  C^{(perm)}_{p,s,d}
+    &= \Delta_{p,s,d,obs} - \Delta_{p,s,d,perm},
+    \label{eq:perm} \\
+  C^{(shuffle)}_{p,s,d}
+    &= \Delta_{p,s,d,obs} - \Delta_{p,s,d,shuffle}.
+    \label{eq:shuffle}
+\end{align}
+The two nulls are never averaged, selected, or replaced by a pooled-null fallback after observation.
+
+\section{Uncertainty and exchangeability}
+For every null and dimension budget, the analysis reports three complementary diagnostics. First, a hierarchical bootstrap resamples projection seeds and then data seeds within each selected projection seed. Second, a two-sided cluster sign-flip randomization test flips complete projection-seed clusters, preserving dependence among data-seed observations within a projection. Third, the fraction of projection-seed means with the aggregate interval direction is reported.
+
+A null-specific gate passes only when all of the following hold:
+\begin{enumerate}
+  \item the hierarchical 95\% interval excludes zero;
+  \item at least 75\% of projection-seed means have the interval direction;
+  \item the two-sided cluster sign-flip value satisfies $p < 0.05$.
+\end{enumerate}
+
+\section{Decision rule}
+A dimension budget passes only when calibration against label permutation and calibration against sequence shuffling each pass all three gates and point in the same direction. The overall synthetic promotion gate passes only when every declared budget passes. Disagreement between nulls, dimensions, confidence intervals, sign stability, or sign-flip tests yields the following verdict:
+\begin{center}
+\texttt{WARN\_REVIEW\_REQUIRED}
+\end{center}
+
+No favourable null may be selected after observation. A synthetic pass would establish only that the declared software contrast survived the declared controls in this task; it would not validate a biological mechanism.
+
+\section{Control diagnostics and unresolved limitations}
+Sequence shuffling must preserve the exact A/C/G/T count of every individual sequence. The maximum per-sequence composition residual is recorded and must equal zero.
+
+Negative examples are still generated through motif-avoidance rejection sampling. V0.7 records this as an unresolved generator limitation rather than claiming that observed-minus-null subtraction causally removes it. Equal output dimension also remains a capacity proxy rather than proof of equal information content, geometry, sparsity, or effective statistical complexity.
+
+Biological dataset progression and any DNA-decryption claim remain blocked regardless of the synthetic v0.7 decision.
+
+\section{Reproducibility boundary}
+The future result bundle must contain full per-projection/per-data calibrated records, a deterministic gzip archive, a compact summary, separate decisions for every dimension, shuffle-composition diagnostics, all seeds, all thresholds, and all resample counts. Results must be retained whether favourable, neutral, or unfavourable. Legacy logs and notes remain append-only.
+
+At the time this preregistration document was frozen, no default v0.7 result had been executed or interpreted.
+
+\end{document}
