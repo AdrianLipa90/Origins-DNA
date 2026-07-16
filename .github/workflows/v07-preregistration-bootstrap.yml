@@ -91,7 +91,7 @@ jobs:
               "result_status": "not_observed_at_preregistration",
               "provenance": "Implemented by ChatGPT under Adrian Lipa's instruction to continue after repository cleanup; materialized on GitHub before default result execution.",
               "epistemic_status": "independent_seed_preregistered_synthetic_null_calibration_pending_result",
-              "destructive": False,
+              "destructive": false,
               "append_only_policy": "Sequences 1 through 14 are retained byte-for-byte; results and corrections must be appended later."
           }
           lines = log_path.read_text(encoding="utf-8").splitlines()
@@ -131,8 +131,8 @@ jobs:
           records = [json.loads(line) for line in Path("logs/changes.jsonl").read_text(encoding="utf-8").splitlines()]
           assert [record["sequence"] for record in records] == list(range(1, 16))
           assert records[-1]["result_status"] == "not_observed_at_preregistration"
-          assert hashlib.sha256(Path("src/origins_dna/null_calibration.py").read_bytes()).hexdigest() == "c89314bdacbff178b033b9874897b744fbcd1db963deee94fe98837a9ba99b08"
-          assert hashlib.sha256(Path("tests/test_null_calibration.py").read_bytes()).hexdigest() == "c2a8ffbd3415385584f141176ea7079e7255bbd885c76e66c03b38292392430a"
+          assert hashlib.sha256(Path("src/origins_dna/null_calibration.py").read_bytes()).hexdigest() == "7f2336300edd4907cb2758004d2023f4d85840fb2a92d3c735787e0911e6303e"
+          assert hashlib.sha256(Path("tests/test_null_calibration.py").read_bytes()).hexdigest() == "dde667b29312dc0e96ce904027072ece102ff51793936b1a1fe9e3da9d7a932c"
           PY
       - name: Commit frozen preregistration
         run: |
