@@ -1,0 +1,150 @@
+name: Origins-DNA v0.7 preregistration bootstrap
+
+on:
+  push:
+    branches:
+      - research/origins-dna-v0.7-null-calibrated-contrast
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/origins-dna-v0.7-null-calibrated-contrast
+          fetch-depth: 0
+      - name: Materialize frozen v0.7 implementation
+        run: |
+          python - <<'PY'
+          from __future__ import annotations
+          import base64
+          import gzip
+          import json
+          from pathlib import Path
+          import subprocess
+
+          payloads = {
+              "docs/NULL_CALIBRATED_PROTOCOL.md": Path(".v07_payload/01_protocol.b64").read_text().strip(),
+              "scripts/run_null_calibrated_contrast.py": Path(".v07_payload/02_script.b64").read_text().strip(),
+              "src/origins_dna/null_calibration.py": Path(".v07_payload/03_null_calibration.b64").read_text().strip(),
+              "src/origins_dna/benchmark.py": Path(".v07_payload/04_benchmark_facade.b64").read_text().strip(),
+              "src/origins_dna/__init__.py": Path(".v07_payload/05_public_api.b64").read_text().strip(),
+              "tests/test_null_calibration.py": "".join(
+                  Path(f".v07_payload/06_tests.part{index}").read_text().strip()
+                  for index in (1, 2, 3)
+              ),
+          }
+          for relative_path, encoded in payloads.items():
+              path = Path(relative_path)
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_bytes(gzip.decompress(base64.b64decode(encoded)))
+
+          log_path = Path("logs/changes.jsonl")
+          note_path = Path("notes/LEGACY_NOTES.md")
+          head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          record = {
+              "schema": "origins-dna.change.v1",
+              "sequence": 15,
+              "date": "2026-07-16",
+              "branch": "research/origins-dna-v0.7-null-calibrated-contrast",
+              "parent_commit": head,
+              "change_type": "independent_null_calibrated_contrast_preregistration",
+              "scope": [
+                  "docs/NULL_CALIBRATED_PROTOCOL.md",
+                  "logs/changes.jsonl",
+                  "notes/LEGACY_NOTES.md",
+                  "scripts/run_null_calibrated_contrast.py",
+                  "src/origins_dna/__init__.py",
+                  "src/origins_dna/benchmark.py",
+                  "src/origins_dna/null_calibration.py",
+                  "tests/test_null_calibration.py"
+              ],
+              "rationale": "Freeze an independent-seed observed-minus-null analysis that calibrates label-permutation and sequence-shuffle controls separately before executing the default v0.7 result.",
+              "chronology": {
+                  "v0.6_aggregate_result_already_observed": True,
+                  "v0.7_projection_schedule_disjoint_from_all_prior_projection_seeds": True,
+                  "v0.7_data_schedule_disjoint_from_prior_data_seeds": True,
+                  "v0.7_default_result_observed_at_record_creation": False
+              },
+              "frozen_design": {
+                  "projection_master_seed": 80801,
+                  "projection_seed_count": 32,
+                  "data_master_seed": 90901,
+                  "data_seed_count": 8,
+                  "budgets": [12, 24, 48],
+                  "nulls": ["label_permutation_null", "sequence_shuffle_null"],
+                  "hierarchical_bootstrap_resamples": 5000,
+                  "cluster_sign_flip_resamples": 20000,
+                  "sign_stability_threshold": 0.75,
+                  "significance_level": 0.05,
+                  "decision_rule": "both null-specific gates must pass in the same direction at every declared budget; no pooled-null fallback"
+              },
+              "limitations": [
+                  "synthetic task only",
+                  "equal output dimension remains a capacity proxy",
+                  "motif-avoidance rejection sampling remains an unresolved generator limitation",
+                  "biological dataset progression remains blocked"
+              ],
+              "result_status": "not_observed_at_preregistration",
+              "provenance": "Implemented by ChatGPT under Adrian Lipa's instruction to continue after repository cleanup; materialized on GitHub before default result execution.",
+              "epistemic_status": "independent_seed_preregistered_synthetic_null_calibration_pending_result",
+              "destructive": False,
+              "append_only_policy": "Sequences 1 through 14 are retained byte-for-byte; results and corrections must be appended later."
+          }
+          lines = log_path.read_text(encoding="utf-8").splitlines()
+          if not any('"sequence":15' in line for line in lines):
+              with log_path.open("a", encoding="utf-8", newline="") as stream:
+                  stream.write(json.dumps(record, separators=(",", ":"), ensure_ascii=False) + "\n")
+
+          heading = "## NOTE-0014 — 2026-07-16 — v0.7 independent null-calibrated preregistration"
+          note = (
+              "\n\n" + heading + "\n\n"
+              "V0.6 revealed non-zero family differences under label-permutation and sequence-shuffle nulls. "
+              "V0.7 freezes two separate calibrated contrasts: observed minus label-permutation and observed minus "
+              "sequence-shuffle. The nulls will not be averaged, selected or pooled after observation.\n\n"
+              "The v0.6 aggregate outcome is already known, so v0.7 uses independent schedules committed before "
+              "execution: 32 projection seeds from master `80801`, excluding every prior projection seed, and 8 data "
+              "seeds from master `90901`, excluding all prior data seeds. A budget passes only if both null-specific "
+              "hierarchical intervals exclude zero in the same direction, both reach 75% sign stability, and both "
+              "cluster sign-flip tests have `p < 0.05`.\n\n"
+              "Sequence shuffling must preserve exact per-sequence A/C/G/T counts. Motif-avoidance rejection sampling "
+              "remains unresolved, so biological dataset progression and DNA-decryption claims remain blocked. No "
+              "default v0.7 result had been executed when this note was appended.\n"
+          )
+          existing_notes = note_path.read_text(encoding="utf-8")
+          if heading not in existing_notes:
+              with note_path.open("a", encoding="utf-8", newline="") as stream:
+                  stream.write(note)
+          PY
+      - name: Verify preregistration implementation
+        run: |
+          python -m compileall -q src scripts
+          python -m pip install -e ".[test]"
+          pytest -q tests/test_null_calibration.py
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          records = [json.loads(line) for line in Path("logs/changes.jsonl").read_text(encoding="utf-8").splitlines()]
+          assert [record["sequence"] for record in records] == list(range(1, 16))
+          assert records[-1]["result_status"] == "not_observed_at_preregistration"
+          assert hashlib.sha256(Path("src/origins_dna/null_calibration.py").read_bytes()).hexdigest() == "c89314bdacbff178b033b9874897b744fbcd1db963deee94fe98837a9ba99b08"
+          assert hashlib.sha256(Path("tests/test_null_calibration.py").read_bytes()).hexdigest() == "c2a8ffbd3415385584f141176ea7079e7255bbd885c76e66c03b38292392430a"
+          PY
+      - name: Commit frozen preregistration
+        run: |
+          git config user.name "Origins-DNA provenance bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/NULL_CALIBRATED_PROTOCOL.md logs/changes.jsonl notes/LEGACY_NOTES.md \
+            scripts/run_null_calibrated_contrast.py src/origins_dna/__init__.py \
+            src/origins_dna/benchmark.py src/origins_dna/null_calibration.py \
+            tests/test_null_calibration.py
+          if git diff --cached --quiet; then
+            echo "Preregistration already materialized"
+          else
+            git commit -m "feat: freeze v0.7 independent null-calibrated analysis"
+            git push origin HEAD:research/origins-dna-v0.7-null-calibrated-contrast
+          fi
