@@ -1,127 +1,67 @@
-name: Origins-DNA v0.7 LaTeX/PDF materializer
+name: Origins-DNA validation
 
 on:
   push:
     branches:
-      - research/origins-dna-v0.7-null-calibrated-contrast
+      - main
+      - "research/**"
+      - "agent/**"
   pull_request:
-    types: [opened, synchronize, reopened]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - "latex/**"
+      - "docs/**"
+      - "results/**"
+      - "README.md"
+      - "pyproject.toml"
+      - ".github/workflows/v05-dimension-matched.yml"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  materialize:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          ref: research/origins-dna-v0.7-null-calibrated-contrast
-          fetch-depth: 0
-      - name: Install LaTeX
+          python-version: "3.11"
+          cache: pip
+      - name: Install package
+        run: python -m pip install -e ".[test]"
+      - name: Run full test suite
+        run: pytest -q
+      - name: Compile Python
+        run: python -m compileall -q src scripts
+      - name: Reproduce v0.5 deterministic benchmark
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends texlive-latex-base texlive-latex-recommended
-      - name: Compile preregistration PDF twice
-        env:
-          SOURCE_DATE_EPOCH: "1784160000"
-          FORCE_SOURCE_DATE: "1"
-          TZ: UTC
+          mkdir -p artifacts
+          python scripts/run_dimension_matched_benchmark.py \
+            --output artifacts/v0.5_dimension_matched_benchmark.json
+      - name: Compile all LaTeX reports
         run: |
-          cd latex
-          pdflatex -interaction=nonstopmode -halt-on-error null_calibrated_contrast_preregistration.tex
-          pdflatex -interaction=nonstopmode -halt-on-error null_calibrated_contrast_preregistration.tex
-          test -s null_calibrated_contrast_preregistration.pdf
-      - name: Append LaTeX/PDF provenance
-        run: |
-          python - <<'PY'
-          import hashlib
-          import json
-          import re
-          from pathlib import Path
-          import subprocess
-
-          log_path = Path("logs/changes.jsonl")
-          note_path = Path("notes/LEGACY_NOTES.md")
-          tex_path = Path("latex/null_calibrated_contrast_preregistration.tex")
-          pdf_path = Path("latex/null_calibrated_contrast_preregistration.pdf")
-          latex_log = Path("latex/null_calibrated_contrast_preregistration.log").read_text(encoding="utf-8", errors="replace")
-          tex_sha = hashlib.sha256(tex_path.read_bytes()).hexdigest()
-          pdf_sha = hashlib.sha256(pdf_path.read_bytes()).hexdigest()
-          warning_matches = re.findall(r"LaTeX Warning|undefined references|Overfull|Underfull", latex_log)
-          head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
-
-          record = {
-              "schema": "origins-dna.change.v1",
-              "sequence": 16,
-              "date": "2026-07-16",
-              "branch": "research/origins-dna-v0.7-null-calibrated-contrast",
-              "parent_commit": head,
-              "change_type": "clean_latex_and_compiled_pdf_preregistration_report",
-              "scope": [
-                  "latex/null_calibrated_contrast_preregistration.tex",
-                  "latex/null_calibrated_contrast_preregistration.pdf",
-                  "logs/changes.jsonl",
-                  "notes/LEGACY_NOTES.md"
-              ],
-              "rationale": "Add the missing reviewable LaTeX source and compiled PDF counterpart for the already frozen v0.7 preregistration before any default v0.7 result execution.",
-              "result_status": "default_v0.7_result_not_executed",
-              "verification": {
-                  "github_pdflatex_passes": 2,
-                  "github_compile_exit": "passed",
-                  "github_log_flag_count": len(warning_matches),
-                  "github_log_flags": warning_matches,
-                  "local_pdflatex_passes": 2,
-                  "local_latex_warnings": 0,
-                  "local_layout_defects": 0,
-                  "rendered_pages_checked_locally": 3,
-                  "tex_sha256": tex_sha,
-                  "github_compiled_pdf_sha256": pdf_sha,
-                  "local_reference_pdf_sha256": "61178932cbf39fb053a36a0db6bf52cde9ce18e7bfd391dd004898ff2dfc0c00",
-                  "deterministic_source_date_epoch": 1784160000,
-                  "cross_tex_distribution_binary_identity_required": False,
-                  "precommit_materializer_failures": [
-                      "run 29478378915 rejected a cross-TeX binary PDF hash assumption before append or commit",
-                      "run 29478543030 failed a strict remote verification step before append or commit"
-                  ]
-              },
-              "provenance": "LaTeX authored, compiled twice, rendered and visually inspected locally by ChatGPT; PDF independently compiled twice and hash-recorded by GitHub Actions before commit.",
-              "epistemic_status": "verified_preregistration_documentation_only",
-              "destructive": False,
-              "append_only_policy": "Sequences 1 through 15 are retained byte-for-byte; this documentation correction is appended as sequence 16."
-          }
-          lines = log_path.read_text(encoding="utf-8").splitlines()
-          if not any('"sequence":16' in line for line in lines):
-              with log_path.open("a", encoding="utf-8", newline="") as stream:
-                  stream.write(json.dumps(record, separators=(",", ":"), ensure_ascii=False) + "\n")
-
-          heading = "## NOTE-0015 — 2026-07-16 — v0.7 clean LaTeX and compiled PDF"
-          note = (
-              "\n\n" + heading + "\n\n"
-              "The first frozen v0.7 preregistration state contained the Markdown protocol, code, tests and append-only "
-              "records but omitted the corresponding reviewable LaTeX source and compiled PDF. The omission was "
-              "identified before execution of the default v0.7 result.\n\n"
-              "`latex/null_calibrated_contrast_preregistration.tex` records the frozen schedules, estimands, uncertainty "
-              "procedures, decision rule, control diagnostics and epistemic boundary. It compiled twice locally with zero "
-              "warnings or layout defects, and all three rendered pages were inspected for clipping, overlap and broken "
-              "glyphs. GitHub Actions independently compiled it twice and recorded PDF SHA-256 `" + pdf_sha + "` and "
-              "remote log-flag count `" + str(len(warning_matches)) + "`. Binary identity across different TeX distributions "
-              "is not required. Two earlier materializer runs failed before append or commit, so neither altered the "
-              "preregistration record. No v0.7 result was executed or interpreted during this correction.\n"
-          )
-          existing = note_path.read_text(encoding="utf-8")
-          if heading not in existing:
-              with note_path.open("a", encoding="utf-8", newline="") as stream:
-                  stream.write(note)
-          PY
-      - name: Commit PDF and append-only records
-        run: |
-          git config user.name "Origins-DNA provenance bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add latex/null_calibrated_contrast_preregistration.pdf logs/changes.jsonl notes/LEGACY_NOTES.md
-          if git diff --cached --quiet; then
-            echo "LaTeX/PDF provenance already materialized"
-          else
-            git commit -m "docs: add compiled v0.7 preregistration PDF"
-            git push origin HEAD:research/origins-dna-v0.7-null-calibrated-contrast
+          if compgen -G "latex/*.tex" > /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends texlive-latex-base texlive-latex-recommended
+            mkdir -p artifacts/latex
+            for source in latex/*.tex; do
+              pdflatex -interaction=nonstopmode -halt-on-error -output-directory=artifacts/latex "$source"
+              pdflatex -interaction=nonstopmode -halt-on-error -output-directory=artifacts/latex "$source"
+              log="artifacts/latex/$(basename "${source%.tex}").log"
+              ! grep -E "(LaTeX Warning|undefined references|Overfull|Underfull)" "$log"
+            done
           fi
+      - name: Upload validation artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: origins-dna-validation-results
+          path: |
+            artifacts/v0.5_dimension_matched_benchmark.json
+            artifacts/v0.5_dimension_matched_benchmark.json.gz
+            artifacts/v0.5_dimension_matched_benchmark_summary.json
+            artifacts/v0.5_dimension_matched_benchmark_comparisons.json
+            artifacts/latex/*.pdf
+          if-no-files-found: error
