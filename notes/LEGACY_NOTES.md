@@ -102,3 +102,10 @@ V0.6 revealed non-zero family differences under label-permutation and sequence-s
 The v0.6 aggregate outcome is already known, so v0.7 uses independent schedules committed before execution: 32 projection seeds from master `80801`, excluding every prior projection seed, and 8 data seeds from master `90901`, excluding all prior data seeds. A budget passes only if both null-specific hierarchical intervals exclude zero in the same direction, both reach 75% sign stability, and both cluster sign-flip tests have `p < 0.05`.
 
 Sequence shuffling must preserve exact per-sequence A/C/G/T counts. Motif-avoidance rejection sampling remains unresolved, so biological dataset progression and DNA-decryption claims remain blocked. No default v0.7 result had been executed when this note was appended.
+
+
+## NOTE-0015 — 2026-07-16 — v0.7 clean LaTeX and compiled PDF
+
+The first frozen v0.7 preregistration state contained the Markdown protocol, code, tests and append-only records but omitted the corresponding reviewable LaTeX source and compiled PDF. The omission was identified before execution of the default v0.7 result.
+
+`latex/null_calibrated_contrast_preregistration.tex` records the frozen schedules, estimands, uncertainty procedures, decision rule, control diagnostics and epistemic boundary. It compiled twice locally with zero warnings or layout defects, and all three rendered pages were inspected for clipping, overlap and broken glyphs. GitHub Actions independently compiled it twice and recorded PDF SHA-256 `abb654bd6535218821896c3409ce15c6f7e5931f517ea4db11d1ff3596087666` and remote log-flag count `0`. Binary identity across different TeX distributions is not required. Two earlier materializer runs failed before append or commit, so neither altered the preregistration record. No v0.7 result was executed or interpreted during this correction.
