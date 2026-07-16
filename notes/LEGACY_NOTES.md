@@ -93,3 +93,12 @@ The workflow is generalized forward-only: pushes to `main`, `research/**` and `a
 While work on v0.7 was beginning, PR #18 merged a temporary staging branch into `main`. That merge added `.github/workflows/bootstrap-ci-main-validation.yml` and replaced the validated read-only validation workflow with a staging variant using `contents: write` and an explicit head-ref checkout. PRs #19–#22 then merged `main` and helper branches in both directions, making the graph noisier.
 
 A direct tree comparison against the clean PR-17 merge found no changes to source code, tests, scientific results, package version, `logs/changes.jsonl` or prior legacy notes. The contamination is limited to the two workflow files. The correction removes the bootstrap workflow and restores the exact validated workflow forward-only. Existing merge commits remain immutable process evidence; no force-push or history rewrite is used.
+
+
+## NOTE-0014 — 2026-07-16 — v0.7 independent null-calibrated preregistration
+
+V0.6 revealed non-zero family differences under label-permutation and sequence-shuffle nulls. V0.7 freezes two separate calibrated contrasts: observed minus label-permutation and observed minus sequence-shuffle. The nulls will not be averaged, selected or pooled after observation.
+
+The v0.6 aggregate outcome is already known, so v0.7 uses independent schedules committed before execution: 32 projection seeds from master `80801`, excluding every prior projection seed, and 8 data seeds from master `90901`, excluding all prior data seeds. A budget passes only if both null-specific hierarchical intervals exclude zero in the same direction, both reach 75% sign stability, and both cluster sign-flip tests have `p < 0.05`.
+
+Sequence shuffling must preserve exact per-sequence A/C/G/T counts. Motif-avoidance rejection sampling remains unresolved, so biological dataset progression and DNA-decryption claims remain blocked. No default v0.7 result had been executed when this note was appended.
