@@ -1,0 +1,55 @@
+name: Origins-DNA v0.9.1 three-quarter causal validation
+
+on:
+  push:
+    branches:
+      - research/origins-dna-v0.9.1-three-quarter-readout
+  pull_request:
+    branches:
+      - research/origins-dna-v0.9-causal-dhse
+      - main
+
+jobs:
+  exact-three-quarter-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install package
+        run: python -m pip install -e '.[test]'
+      - name: Run three-quarter exact tests
+        run: pytest tests/test_causal_three_quarter.py
+      - name: Run causal v0.9 regression tests
+        run: pytest tests/test_causal_dhse.py
+      - name: Run full regression suite
+        run: pytest
+      - name: Compile Python
+        run: python -m compileall -q src scripts
+
+  frozen-three-quarter-benchmark:
+    needs: exact-three-quarter-gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install package
+        run: python -m pip install -e '.[test]'
+      - name: Execute frozen v0.9.1 benchmark
+        run: >-
+          python scripts/run_causal_three_quarter_benchmark.py
+          --output results/v0.9.1_three_quarter_causal_benchmark.json
+          --samples 400
+          --length 64
+          --motif CGCG
+          --projection-seed 134091
+          --bootstrap-resamples 2000
+      - name: Upload three-quarter result bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: origins-dna-v091-three-quarter-causal-results
+          path: results/v0.9.1_three_quarter_causal_benchmark*
+          if-no-files-found: error
