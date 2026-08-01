@@ -11,11 +11,13 @@ from origins_dna.causal_dhse import (
     conjugate_product_identity,
     determinant,
     double_reverse_complement_identity,
+    multiply,
     operator_word,
     order_is_noncommutative,
     prefix_products,
     projective_image,
     reciprocal_conjugate,
+    reverse_complement_expected_terminal,
     reverse_complement_terminal_identity,
     terminal_only_vector,
     terminal_product,
@@ -58,12 +60,19 @@ def test_complement_is_operatorwise_reciprocal_conjugation() -> None:
     assert operator_word(complement(sequence)) == expected
 
 
-def test_reverse_complement_terminal_star_identity() -> None:
+def test_reciprocal_conjugation_is_an_automorphism() -> None:
+    assignment = base_operator_assignment()
+    left = assignment["A"]
+    right = assignment["C"]
+    assert reciprocal_conjugate(multiply(left, right)) == multiply(
+        reciprocal_conjugate(left), reciprocal_conjugate(right)
+    )
+
+
+def test_reverse_complement_terminal_identity() -> None:
     for sequence in ("A", "CGCG", "AACGTCGA", "ATGCCGTA"):
         assert reverse_complement_terminal_identity(sequence)
-        assert terminal_product(reverse_complement(sequence)) == reciprocal_conjugate(
-            terminal_product(sequence)
-        )
+        assert terminal_product(reverse_complement(sequence)) == reverse_complement_expected_terminal(sequence)
 
 
 def test_double_reverse_complement_restores_word_and_trajectory() -> None:
