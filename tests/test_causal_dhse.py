@@ -11,12 +11,12 @@ from origins_dna.causal_dhse import (
     conjugate_product_identity,
     determinant,
     double_reverse_complement_identity,
-    multiply,
     operator_word,
     order_is_noncommutative,
     prefix_products,
     projective_image,
     reciprocal_conjugate,
+    reciprocal_conjugation_identity,
     reverse_complement_expected_terminal,
     reverse_complement_terminal_identity,
     terminal_only_vector,
@@ -53,26 +53,32 @@ def test_count_matched_words_are_noncommutative() -> None:
     assert causal_trajectory("CGCG") != causal_trajectory("CCGG")
 
 
-def test_complement_is_operatorwise_reciprocal_conjugation() -> None:
-    sequence = "AACGTCGA"
-    assert conjugate_product_identity(sequence)
-    expected = tuple(reciprocal_conjugate(matrix) for matrix in operator_word(sequence))
-    assert operator_word(complement(sequence)) == expected
+def test_reciprocal_conjugation_is_an_involutive_automorphism() -> None:
+    matrices = tuple(base_operator_assignment().values())
+    for matrix in matrices:
+        assert reciprocal_conjugate(reciprocal_conjugate(matrix)) == matrix
+        for right in matrices:
+            assert reciprocal_conjugation_identity(matrix, right)
 
 
-def test_reciprocal_conjugation_is_an_automorphism() -> None:
-    assignment = base_operator_assignment()
-    left = assignment["A"]
-    right = assignment["C"]
-    assert reciprocal_conjugate(multiply(left, right)) == multiply(
-        reciprocal_conjugate(left), reciprocal_conjugate(right)
-    )
+def test_complement_is_operatorwise_and_terminal_conjugation() -> None:
+    for sequence in ("A", "CGCG", "AACGTCGA", "ATGCCGTA"):
+        assert conjugate_product_identity(sequence)
+        expected_word = tuple(
+            reciprocal_conjugate(matrix) for matrix in operator_word(sequence)
+        )
+        assert operator_word(complement(sequence)) == expected_word
+        assert terminal_product(complement(sequence)) == reciprocal_conjugate(
+            terminal_product(sequence)
+        )
 
 
 def test_reverse_complement_terminal_identity() -> None:
     for sequence in ("A", "CGCG", "AACGTCGA", "ATGCCGTA"):
         assert reverse_complement_terminal_identity(sequence)
-        assert terminal_product(reverse_complement(sequence)) == reverse_complement_expected_terminal(sequence)
+        assert terminal_product(
+            reverse_complement(sequence)
+        ) == reverse_complement_expected_terminal(sequence)
 
 
 def test_double_reverse_complement_restores_word_and_trajectory() -> None:
@@ -96,4 +102,7 @@ def test_feature_vectors_are_finite_fixed_and_order_sensitive() -> None:
         assert left_vector
         assert len(left_vector) == len(right_vector)
         assert left_vector != right_vector
-        assert all(value == value and value not in (float("inf"), float("-inf")) for value in left_vector)
+        assert all(
+            value == value and value not in (float("inf"), float("-inf"))
+            for value in left_vector
+        )
