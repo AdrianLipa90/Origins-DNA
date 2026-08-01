@@ -1,0 +1,1 @@
+Pending fix: wire full exact response and declare NumPy before treating CI as valid.

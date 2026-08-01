@@ -1,0 +1,1 @@
+Temporary branch note: exact-backend wiring and dependency update are pending before CI can be treated as meaningful. This note must be superseded forward-only, not deleted, after the wiring commit.

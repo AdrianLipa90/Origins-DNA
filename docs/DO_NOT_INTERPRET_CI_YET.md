@@ -1,0 +1,1 @@
+Do not interpret v0.8 CI until exact-backend wiring and NumPy dependency correction are committed.

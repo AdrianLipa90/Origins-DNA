@@ -1,0 +1,1 @@
+The v0.8 branch is not ready for validation until `dhse_projective.py` is wired to `dhse_exact.exact_forcing_response` and NumPy is declared in `pyproject.toml`. CI results before that correction must not be interpreted.
