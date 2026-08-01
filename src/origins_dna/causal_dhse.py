@@ -18,6 +18,7 @@ IDENTITY: Matrix = (1, 0, 0, 1)
 
 
 def reciprocal_conjugate(matrix: Matrix) -> Matrix:
+    """Return J @ matrix @ J for J=((0, 1), (1, 0))."""
     a, b, c, d = matrix
     return (d, c, b, a)
 
@@ -30,6 +31,13 @@ def multiply(left: Matrix, right: Matrix) -> Matrix:
         a * B + b * D,
         c * A + d * C,
         c * B + d * D,
+    )
+
+
+def reciprocal_conjugation_identity(left: Matrix, right: Matrix) -> bool:
+    """Check star(left @ right) == star(left) @ star(right) exactly."""
+    return reciprocal_conjugate(multiply(left, right)) == multiply(
+        reciprocal_conjugate(left), reciprocal_conjugate(right)
     )
 
 
@@ -62,7 +70,9 @@ def _terminal_from_word(word: str, assignment: dict[str, Matrix]) -> Matrix:
 @lru_cache(maxsize=1)
 def base_operator_assignment() -> dict[str, Matrix]:
     """Return the amended deterministic reciprocal-pair assignment."""
-    matrices = sorted(tuple(int(value) for value in row) for row in primitive_maps().tolist())
+    matrices = sorted(
+        tuple(int(value) for value in row) for row in primitive_maps().tolist()
+    )
     matrix_set = set(matrices)
     pairs: list[tuple[Matrix, Matrix]] = []
     seen: set[Matrix] = set()
@@ -80,7 +90,12 @@ def base_operator_assignment() -> dict[str, Matrix]:
     first = pairs[0]
     chosen: tuple[Matrix, Matrix] | None = None
     for candidate in pairs[1:]:
-        trial = {"A": first[0], "C": candidate[0], "G": candidate[1], "T": first[1]}
+        trial = {
+            "A": first[0],
+            "C": candidate[0],
+            "G": candidate[1],
+            "T": first[1],
+        }
         if len(set(trial.values())) != 4:
             continue
         if _terminal_from_word("CGCG", trial) != _terminal_from_word("CCGG", trial):
@@ -88,7 +103,12 @@ def base_operator_assignment() -> dict[str, Matrix]:
             break
     if chosen is None:
         raise RuntimeError("no admissible noncommutative C/G reciprocal pair found")
-    assignment = {"A": first[0], "C": chosen[0], "G": chosen[1], "T": first[1]}
+    assignment = {
+        "A": first[0],
+        "C": chosen[0],
+        "G": chosen[1],
+        "T": first[1],
+    }
     if tuple(assignment) != tuple(BASES):
         raise RuntimeError("causal operator assignment is not in canonical base order")
     return assignment
@@ -130,7 +150,17 @@ def causal_trajectory(sequence: str) -> tuple[CausalState, ...]:
     states = []
     for index, (base, product) in enumerate(zip(normalized, products), start=1):
         q = projective_image(product)
-        states.append(CausalState(index, base, product, q, math.log(q.numerator) - math.log(q.denominator), _residual(q), exact_forcing_response(q)))
+        states.append(
+            CausalState(
+                index,
+                base,
+                product,
+                q,
+                math.log(q.numerator) - math.log(q.denominator),
+                _residual(q),
+                exact_forcing_response(q),
+            )
+        )
     return tuple(states)
 
 
@@ -140,19 +170,28 @@ def terminal_product(sequence: str) -> Matrix:
 
 
 def conjugate_product_identity(sequence: str) -> bool:
+    """Check complement at both operator-word and terminal-product levels."""
     normalized = normalize_dna(sequence)
     complemented = complement(normalized)
-    expected = tuple(reciprocal_conjugate(matrix) for matrix in operator_word(normalized))
-    return operator_word(complemented) == expected
+    expected_word = tuple(
+        reciprocal_conjugate(matrix) for matrix in operator_word(normalized)
+    )
+    word_identity = operator_word(complemented) == expected_word
+    terminal_identity = terminal_product(complemented) == reciprocal_conjugate(
+        terminal_product(normalized)
+    )
+    return word_identity and terminal_identity
 
 
 def reverse_complement_expected_terminal(sequence: str) -> Matrix:
     """Return the exact terminal implied by reverse-complement order.
 
-    The involution used here is an automorphism:
+    The involution is conjugation by J and therefore an automorphism:
     star(A @ B) = star(A) @ star(B).
-    For w=x1...xn, terminal(w)=Mn...M1, while terminal(rc(w)) is
-    star(M1)...star(Mn). This is generally not star(terminal(w)).
+
+    For w=x1...xn, terminal(w)=Mn...M1. Reverse-complement changes the word to
+    comp(xn)...comp(x1), hence its terminal is star(M1)...star(Mn). This is
+    generally different from star(terminal(w)).
     """
     current = IDENTITY
     for operator in operator_word(sequence):
@@ -161,7 +200,9 @@ def reverse_complement_expected_terminal(sequence: str) -> Matrix:
 
 
 def reverse_complement_terminal_identity(sequence: str) -> bool:
-    return terminal_product(reverse_complement(sequence)) == reverse_complement_expected_terminal(sequence)
+    return terminal_product(
+        reverse_complement(sequence)
+    ) == reverse_complement_expected_terminal(sequence)
 
 
 def double_reverse_complement_identity(sequence: str) -> bool:
@@ -183,7 +224,9 @@ def _mean(values: Iterable[float]) -> float:
     return 0.0 if not data else math.fsum(data) / len(data)
 
 
-def _trajectory_summary(states: Sequence[CausalState], *, include_dhse: bool) -> tuple[float, ...]:
+def _trajectory_summary(
+    states: Sequence[CausalState], *, include_dhse: bool
+) -> tuple[float, ...]:
     if not states:
         return (0.0,) * (20 if include_dhse else 12)
     logs = tuple(state.signed_log_q for state in states)
@@ -191,54 +234,102 @@ def _trajectory_summary(states: Sequence[CausalState], *, include_dhse: bool) ->
     log_delta = tuple(b - a for a, b in zip(logs, logs[1:]))
     residual_delta = tuple(b - a for a, b in zip(residuals, residuals[1:]))
     terminal = states[-1].product
-    scale = max(abs(v) for v in terminal) or 1
+    scale = max(abs(value) for value in terminal) or 1
     base = (
-        _mean(logs), _mean(abs(v) for v in logs), logs[-1],
-        _mean(residuals), max(residuals), residuals[-1],
-        _mean(log_delta), _mean(abs(v) for v in log_delta),
-        _mean(residual_delta), _mean(abs(v) for v in residual_delta),
-        determinant(terminal) / (scale * scale), trace(terminal) / scale,
+        _mean(logs),
+        _mean(abs(value) for value in logs),
+        logs[-1],
+        _mean(residuals),
+        max(residuals),
+        residuals[-1],
+        _mean(log_delta),
+        _mean(abs(value) for value in log_delta),
+        _mean(residual_delta),
+        _mean(abs(value) for value in residual_delta),
+        determinant(terminal) / (scale * scale),
+        trace(terminal) / scale,
     )
     if not include_dhse:
         return base
-    response_means = tuple(_mean(state.response[i] for state in states) for i in range(4))
-    response_deltas = tuple(_mean(r.response[i] - l.response[i] for l, r in zip(states, states[1:])) for i in range(4))
+    response_means = tuple(
+        _mean(state.response[index] for state in states) for index in range(4)
+    )
+    response_deltas = tuple(
+        _mean(
+            right.response[index] - left.response[index]
+            for left, right in zip(states, states[1:])
+        )
+        for index in range(4)
+    )
     return base + response_means + response_deltas
 
 
-def causal_dhse_vector(sequence: str, *, windows: Sequence[int] = WINDOWS) -> tuple[float, ...]:
+def causal_dhse_vector(
+    sequence: str, *, windows: Sequence[int] = WINDOWS
+) -> tuple[float, ...]:
     normalized = normalize_dna(sequence)
     output: list[float] = []
     for length in windows:
-        summaries = tuple(_trajectory_summary(causal_trajectory(normalized[s:s + length]), include_dhse=True) for s in range(0, max(0, len(normalized) - length + 1)))
-        output.extend((0.0,) * 20 if not summaries else (_mean(row[i] for row in summaries) for i in range(20)))
+        summaries = tuple(
+            _trajectory_summary(
+                causal_trajectory(normalized[start : start + length]),
+                include_dhse=True,
+            )
+            for start in range(0, max(0, len(normalized) - length + 1))
+        )
+        output.extend(
+            (0.0,) * 20
+            if not summaries
+            else (_mean(row[index] for row in summaries) for index in range(20))
+        )
     return tuple(output)
 
 
-def causal_projective_only_vector(sequence: str, *, windows: Sequence[int] = WINDOWS) -> tuple[float, ...]:
+def causal_projective_only_vector(
+    sequence: str, *, windows: Sequence[int] = WINDOWS
+) -> tuple[float, ...]:
     normalized = normalize_dna(sequence)
     output: list[float] = []
     for length in windows:
-        summaries = tuple(_trajectory_summary(causal_trajectory(normalized[s:s + length]), include_dhse=False) for s in range(0, max(0, len(normalized) - length + 1)))
-        output.extend((0.0,) * 12 if not summaries else (_mean(row[i] for row in summaries) for i in range(12)))
+        summaries = tuple(
+            _trajectory_summary(
+                causal_trajectory(normalized[start : start + length]),
+                include_dhse=False,
+            )
+            for start in range(0, max(0, len(normalized) - length + 1))
+        )
+        output.extend(
+            (0.0,) * 12
+            if not summaries
+            else (_mean(row[index] for row in summaries) for index in range(12))
+        )
     return tuple(output)
 
 
-def terminal_only_vector(sequence: str, *, windows: Sequence[int] = WINDOWS) -> tuple[float, ...]:
+def terminal_only_vector(
+    sequence: str, *, windows: Sequence[int] = WINDOWS
+) -> tuple[float, ...]:
     normalized = normalize_dna(sequence)
     output: list[float] = []
     for length in windows:
-        matrices = tuple(terminal_product(normalized[s:s + length]) for s in range(0, max(0, len(normalized) - length + 1)))
+        matrices = tuple(
+            terminal_product(normalized[start : start + length])
+            for start in range(0, max(0, len(normalized) - length + 1))
+        )
         if not matrices:
             output.extend((0.0,) * 6)
             continue
         images = tuple(projective_image(matrix) for matrix in matrices)
-        output.extend((
-            _mean(math.log(q.numerator) - math.log(q.denominator) for q in images),
-            _mean(float(_residual(q)) for q in images),
-            _mean(determinant(matrix) for matrix in matrices),
-            _mean(trace(matrix) for matrix in matrices),
-            _mean(matrix[0] / max(matrix) for matrix in matrices),
-            _mean(matrix[3] / max(matrix) for matrix in matrices),
-        ))
+        output.extend(
+            (
+                _mean(
+                    math.log(q.numerator) - math.log(q.denominator) for q in images
+                ),
+                _mean(float(_residual(q)) for q in images),
+                _mean(determinant(matrix) for matrix in matrices),
+                _mean(trace(matrix) for matrix in matrices),
+                _mean(matrix[0] / max(matrix) for matrix in matrices),
+                _mean(matrix[3] / max(matrix) for matrix in matrices),
+            )
+        )
     return tuple(output)
