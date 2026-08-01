@@ -23,7 +23,6 @@ def reciprocal_conjugate(matrix: Matrix) -> Matrix:
 
 
 def multiply(left: Matrix, right: Matrix) -> Matrix:
-    """Return left @ right with exact integer coefficients."""
     a, b, c, d = left
     A, B, C, D = right
     return (
@@ -53,9 +52,22 @@ def projective_image(matrix: Matrix, q: Fraction | int = Fraction(1)) -> Fractio
     return (a * value + b) / denominator
 
 
+def _terminal_from_word(word: str, assignment: dict[str, Matrix]) -> Matrix:
+    current = IDENTITY
+    for base in word:
+        current = multiply(assignment[base], current)
+    return current
+
+
 @lru_cache(maxsize=1)
 def base_operator_assignment() -> dict[str, Matrix]:
-    """Apply the preregistered lexicographic reciprocal-pair assignment."""
+    """Return the amended deterministic reciprocal-pair assignment.
+
+    A/T use the first lexicographic reciprocal pair. C/G use the first later
+    pair that makes the frozen count-matched words CGCG and CCGG algebraically
+    noncommutative at the terminal-product level. This gate is label blind and
+    was fixed before any predictive benchmark was executed.
+    """
     matrices = sorted(tuple(int(value) for value in row) for row in primitive_maps().tolist())
     matrix_set = set(matrices)
     pairs: list[tuple[Matrix, Matrix]] = []
@@ -71,10 +83,20 @@ def base_operator_assignment() -> dict[str, Matrix]:
         pairs.append(pair)  # type: ignore[arg-type]
         seen.update(pair)
     pairs.sort(key=lambda pair: pair[0])
-    first, second = pairs[:2]
-    assignment = {"A": first[0], "T": first[1], "C": second[0], "G": second[1]}
-    if len(set(assignment.values())) != 4:
-        raise RuntimeError("causal operator assignment is not four-way distinct")
+    first = pairs[0]
+    chosen: tuple[Matrix, Matrix] | None = None
+    for candidate in pairs[1:]:
+        trial = {"A": first[0], "C": candidate[0], "G": candidate[1], "T": first[1]}
+        if len(set(trial.values())) != 4:
+            continue
+        if _terminal_from_word("CGCG", trial) != _terminal_from_word("CCGG", trial):
+            chosen = candidate
+            break
+    if chosen is None:
+        raise RuntimeError("no admissible noncommutative C/G reciprocal pair found")
+    assignment = {"A": first[0], "C": chosen[0], "G": chosen[1], "T": first[1]}
+    if tuple(assignment) != tuple(BASES):
+        raise RuntimeError("causal operator assignment is not in canonical base order")
     return assignment
 
 
@@ -85,7 +107,6 @@ def operator_word(sequence: str) -> tuple[Matrix, ...]:
 
 
 def prefix_products(sequence: str) -> tuple[Matrix, ...]:
-    """Return M_xk ... M_x1 for all prefixes read 5'->3'."""
     current = IDENTITY
     output: list[Matrix] = []
     for operator in operator_word(sequence):
@@ -115,17 +136,7 @@ def causal_trajectory(sequence: str) -> tuple[CausalState, ...]:
     states = []
     for index, (base, product) in enumerate(zip(normalized, products), start=1):
         q = projective_image(product)
-        states.append(
-            CausalState(
-                index=index,
-                base=base,
-                product=product,
-                q=q,
-                signed_log_q=math.log(q.numerator) - math.log(q.denominator),
-                residual=_residual(q),
-                response=exact_forcing_response(q),
-            )
-        )
+        states.append(CausalState(index, base, product, q, math.log(q.numerator) - math.log(q.denominator), _residual(q), exact_forcing_response(q)))
     return tuple(states)
 
 
@@ -135,12 +146,6 @@ def terminal_product(sequence: str) -> Matrix:
 
 
 def conjugate_product_identity(sequence: str) -> bool:
-    """Complement-only identity: star reverses multiplication order.
-
-    star(M_n...M_1) = star(M_1)...star(M_n). Therefore complement-only is
-    checked against explicit operatorwise conjugation rather than a false
-    terminal equality with star(total).
-    """
     normalized = normalize_dna(sequence)
     complemented = complement(normalized)
     expected = tuple(reciprocal_conjugate(matrix) for matrix in operator_word(normalized))
@@ -148,17 +153,13 @@ def conjugate_product_identity(sequence: str) -> bool:
 
 
 def reverse_complement_terminal_identity(sequence: str) -> bool:
-    """For reverse complement, terminal(rc(w)) == star(terminal(w))."""
-    return terminal_product(reverse_complement(sequence)) == reciprocal_conjugate(
-        terminal_product(sequence)
-    )
+    return terminal_product(reverse_complement(sequence)) == reciprocal_conjugate(terminal_product(sequence))
 
 
 def double_reverse_complement_identity(sequence: str) -> bool:
     normalized = normalize_dna(sequence)
-    return reverse_complement(reverse_complement(normalized)) == normalized and operator_word(
-        reverse_complement(reverse_complement(normalized))
-    ) == operator_word(normalized)
+    twice = reverse_complement(reverse_complement(normalized))
+    return twice == normalized and operator_word(twice) == operator_word(normalized)
 
 
 def order_is_noncommutative(left: str, right: str) -> bool:
@@ -185,31 +186,16 @@ def _trajectory_summary(states: Sequence[CausalState], *, include_dhse: bool) ->
     a, b, c, d = terminal
     scale = max(abs(a), abs(b), abs(c), abs(d), 1)
     base = (
-        _mean(logs),
-        _mean(abs(value) for value in logs),
-        logs[-1],
-        _mean(residuals),
-        max(residuals),
-        residuals[-1],
-        _mean(log_delta),
-        _mean(abs(value) for value in log_delta),
-        _mean(residual_delta),
-        _mean(abs(value) for value in residual_delta),
-        determinant(terminal) / (scale * scale),
-        trace(terminal) / scale,
+        _mean(logs), _mean(abs(v) for v in logs), logs[-1],
+        _mean(residuals), max(residuals), residuals[-1],
+        _mean(log_delta), _mean(abs(v) for v in log_delta),
+        _mean(residual_delta), _mean(abs(v) for v in residual_delta),
+        determinant(terminal) / (scale * scale), trace(terminal) / scale,
     )
     if not include_dhse:
         return base
-    response_means = tuple(
-        _mean(state.response[index] for state in states) for index in range(4)
-    )
-    response_deltas = tuple(
-        _mean(
-            right.response[index] - left.response[index]
-            for left, right in zip(states, states[1:])
-        )
-        for index in range(4)
-    )
+    response_means = tuple(_mean(state.response[i] for state in states) for i in range(4))
+    response_deltas = tuple(_mean(r.response[i] - l.response[i] for l, r in zip(states, states[1:])) for i in range(4))
     return base + response_means + response_deltas
 
 
@@ -217,16 +203,8 @@ def causal_dhse_vector(sequence: str, *, windows: Sequence[int] = WINDOWS) -> tu
     normalized = normalize_dna(sequence)
     output: list[float] = []
     for length in windows:
-        chunks = (
-            normalized[start : start + length]
-            for start in range(0, max(0, len(normalized) - length + 1))
-        )
-        summaries = tuple(_trajectory_summary(causal_trajectory(chunk), include_dhse=True) for chunk in chunks)
-        width = 20
-        if not summaries:
-            output.extend((0.0,) * width)
-        else:
-            output.extend(_mean(row[index] for row in summaries) for index in range(width))
+        summaries = tuple(_trajectory_summary(causal_trajectory(normalized[s:s + length]), include_dhse=True) for s in range(0, max(0, len(normalized) - length + 1)))
+        output.extend((0.0,) * 20 if not summaries else (_mean(row[i] for row in summaries) for i in range(20)))
     return tuple(output)
 
 
@@ -234,15 +212,8 @@ def causal_projective_only_vector(sequence: str, *, windows: Sequence[int] = WIN
     normalized = normalize_dna(sequence)
     output: list[float] = []
     for length in windows:
-        summaries = tuple(
-            _trajectory_summary(causal_trajectory(normalized[start : start + length]), include_dhse=False)
-            for start in range(0, max(0, len(normalized) - length + 1))
-        )
-        width = 12
-        if not summaries:
-            output.extend((0.0,) * width)
-        else:
-            output.extend(_mean(row[index] for row in summaries) for index in range(width))
+        summaries = tuple(_trajectory_summary(causal_trajectory(normalized[s:s + length]), include_dhse=False) for s in range(0, max(0, len(normalized) - length + 1)))
+        output.extend((0.0,) * 12 if not summaries else (_mean(row[i] for row in summaries) for i in range(12)))
     return tuple(output)
 
 
@@ -250,22 +221,17 @@ def terminal_only_vector(sequence: str, *, windows: Sequence[int] = WINDOWS) -> 
     normalized = normalize_dna(sequence)
     output: list[float] = []
     for length in windows:
-        matrices = tuple(
-            terminal_product(normalized[start : start + length])
-            for start in range(0, max(0, len(normalized) - length + 1))
-        )
+        matrices = tuple(terminal_product(normalized[s:s + length]) for s in range(0, max(0, len(normalized) - length + 1)))
         if not matrices:
             output.extend((0.0,) * 6)
             continue
         images = tuple(projective_image(matrix) for matrix in matrices)
-        output.extend(
-            (
-                _mean(math.log(q.numerator) - math.log(q.denominator) for q in images),
-                _mean(float(_residual(q)) for q in images),
-                _mean(determinant(matrix) for matrix in matrices),
-                _mean(trace(matrix) for matrix in matrices),
-                _mean(matrix[0] / max(matrix) for matrix in matrices),
-                _mean(matrix[3] / max(matrix) for matrix in matrices),
-            )
-        )
+        output.extend((
+            _mean(math.log(q.numerator) - math.log(q.denominator) for q in images),
+            _mean(float(_residual(q)) for q in images),
+            _mean(determinant(matrix) for matrix in matrices),
+            _mean(trace(matrix) for matrix in matrices),
+            _mean(matrix[0] / max(matrix) for matrix in matrices),
+            _mean(matrix[3] / max(matrix) for matrix in matrices),
+        ))
     return tuple(output)
