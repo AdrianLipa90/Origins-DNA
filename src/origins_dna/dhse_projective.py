@@ -1,20 +1,19 @@
 """Exact DHSE projective-balance representation for DNA windows.
 
-The module maps complementary nucleotide partitions to positive rational odds.
-Watson--Crick complementation acts exactly as q -> 1/q on dual channels.  The
-DHSE response is evaluated against the frozen Stage-M rational breakpoint
-certificate from ``secret-of-a-half``; no fitted parameters or grid
-interpolation are used.
+Complementary nucleotide partitions are mapped to positive rational odds.
+Watson--Crick complementation acts exactly as q -> 1/q. The nonlinear response
+is the complete Stage-M forcing count N_1..N_4 evaluated by the exact backend;
+there is no grid interpolation or fitted parameter.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from fractions import Fraction
-from functools import lru_cache
 import math
 from typing import Iterable, Sequence
 
+from .dhse_exact import LENGTHS as DHSE_LENGTHS, EXPECTED, exact_forcing_response
 from .encoding import normalize_dna
 from .orbital_atomic import complement, reverse_complement
 
@@ -23,18 +22,6 @@ DEFAULT_STRIDE = 1
 PRIMARY_OFFSET = Fraction(1, 1)
 DUAL_CHANNELS = ("AT", "CG", "RY", "MK")
 INVARIANT_CHANNEL = "WS"
-DHSE_LENGTHS = (1, 2, 3, 4)
-
-# Exact maximizer certificate imported from DHSE-001 Stage M.  These constants
-# are provenance checks and are not used to fit the DNA representation.
-DHSE_STAGE_M_MAXIMA = {
-    1: ((Fraction(9, 11), Fraction(11, 12)), (Fraction(12, 11), Fraction(11, 9))),
-    2: ((Fraction(1), Fraction(1)),),
-    3: ((Fraction(1), Fraction(1)),),
-    4: ((Fraction(9882, 9911), Fraction(341, 342)), (Fraction(342, 341), Fraction(9911, 9882))),
-}
-DHSE_STAGE_M_COUNTS_AT_ONE = {1: 24752, 2: 314690, 3: 943740, 4: 2219236}
-DHSE_STAGE_M_MAXIMUM_COUNTS = {1: 39984, 2: 314690, 3: 943740, 4: 2224570}
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,8 +73,6 @@ def projective_odds(
     *,
     offset: Fraction | int = PRIMARY_OFFSET,
 ) -> Fraction:
-    """Return an exact positive rational odds coordinate for one DNA sequence."""
-
     normalized = normalize_dna(sequence)
     alpha = _validate_offset(offset)
     numerator, denominator = _count_partition(normalized, channel)
@@ -109,20 +94,24 @@ def projective_window_odds(
     if window_size > len(normalized):
         return ()
     channels = DUAL_CHANNELS + (INVARIANT_CHANNEL,)
-    output = []
-    for start in range(0, len(normalized) - window_size + 1, stride):
-        chunk = normalized[start : start + window_size]
-        output.append(
-            ProjectiveWindow(
-                start=start,
-                stop=start + window_size,
-                odds=tuple(
-                    (channel, projective_odds(chunk, channel, offset=offset))
-                    for channel in channels
-                ),
-            )
+    return tuple(
+        ProjectiveWindow(
+            start=start,
+            stop=start + window_size,
+            odds=tuple(
+                (
+                    channel,
+                    projective_odds(
+                        normalized[start : start + window_size],
+                        channel,
+                        offset=offset,
+                    ),
+                )
+                for channel in channels
+            ),
         )
-    return tuple(output)
+        for start in range(0, len(normalized) - window_size + 1, stride)
+    )
 
 
 def self_dual_residual(q: Fraction | int) -> Fraction:
@@ -139,37 +128,6 @@ def signed_log_odds(q: Fraction | int) -> float:
     return math.log(value.numerator) - math.log(value.denominator)
 
 
-def _closed_interval_contains(q: Fraction, interval: tuple[Fraction, Fraction]) -> bool:
-    return interval[0] <= q <= interval[1]
-
-
-def dhse_certificate_response(q: Fraction | int) -> tuple[int, int, int, int]:
-    """Evaluate the frozen Stage-M maximum-membership certificate.
-
-    Each component is the exact Stage-M maximum count when ``q`` belongs to a
-    certified maximizer component and the certified q=1 count otherwise.  This
-    compact response is deliberately certificate-based.  A later heavyweight
-    evaluator may import the complete breakpoint census without changing this
-    preregistered public contract.
-    """
-
-    value = Fraction(q)
-    if value <= 0:
-        raise ValueError("q must be positive")
-    output = []
-    for length in DHSE_LENGTHS:
-        on_maximum = any(
-            _closed_interval_contains(value, interval)
-            for interval in DHSE_STAGE_M_MAXIMA[length]
-        )
-        output.append(
-            DHSE_STAGE_M_MAXIMUM_COUNTS[length]
-            if on_maximum
-            else DHSE_STAGE_M_COUNTS_AT_ONE[length]
-        )
-    return tuple(output)  # type: ignore[return-value]
-
-
 def dhse_window_states(
     sequence: str,
     window_size: int,
@@ -177,23 +135,21 @@ def dhse_window_states(
     stride: int = DEFAULT_STRIDE,
     offset: Fraction | int = PRIMARY_OFFSET,
 ) -> tuple[DHSEWindowState, ...]:
-    output = []
-    for window in projective_window_odds(
-        sequence, window_size, stride=stride, offset=offset
-    ):
-        for channel, q in window.odds:
-            output.append(
-                DHSEWindowState(
-                    start=window.start,
-                    stop=window.stop,
-                    channel=channel,
-                    q=q,
-                    signed_log_odds=signed_log_odds(q),
-                    self_dual_residual=self_dual_residual(q),
-                    responses=dhse_certificate_response(q),
-                )
-            )
-    return tuple(output)
+    return tuple(
+        DHSEWindowState(
+            start=window.start,
+            stop=window.stop,
+            channel=channel,
+            q=q,
+            signed_log_odds=signed_log_odds(q),
+            self_dual_residual=self_dual_residual(q),
+            responses=exact_forcing_response(q),
+        )
+        for window in projective_window_odds(
+            sequence, window_size, stride=stride, offset=offset
+        )
+        for channel, q in window.odds
+    )
 
 
 def _mean(values: Iterable[float]) -> float:
@@ -202,7 +158,7 @@ def _mean(values: Iterable[float]) -> float:
 
 
 def _normalized_response(value: int, length: int) -> float:
-    return value / DHSE_STAGE_M_MAXIMUM_COUNTS[length]
+    return value / EXPECTED[length]["maximum"]
 
 
 def _channel_summary(states: Sequence[DHSEWindowState], channel: str) -> tuple[float, ...]:
@@ -245,12 +201,12 @@ def dhse_projective_vector(
     include_dhse: bool = True,
     channels: Sequence[str] = DUAL_CHANNELS,
 ) -> tuple[float, ...]:
-    """Return a deterministic fixed-size multiscale DHSE DNA representation."""
-
     normalized = normalize_dna(sequence)
     materialized_windows = tuple(windows)
     materialized_channels = tuple(channels)
-    if not materialized_windows or any(value <= 0 for value in materialized_windows):
+    if not materialized_windows or any(
+        not isinstance(value, int) or value <= 0 for value in materialized_windows
+    ):
         raise ValueError("windows must contain positive integers")
     if not materialized_channels:
         raise ValueError("channels must not be empty")
@@ -261,7 +217,6 @@ def dhse_projective_vector(
         )
         for channel in materialized_channels:
             summary = _channel_summary(states, channel)
-            # summary layout: log(2), residual(2), DHSE(4), local changes(4)
             if include_signed_log and include_dhse:
                 output.extend(summary)
             elif include_signed_log:
@@ -302,8 +257,8 @@ def verify_complement_covariance(sequence: str) -> dict[str, bool]:
         for channel in DUAL_CHANNELS
     )
     response_invariant = all(
-        dhse_certificate_response(projective_odds(complemented, channel))
-        == dhse_certificate_response(projective_odds(normalized, channel))
+        exact_forcing_response(projective_odds(complemented, channel))
+        == exact_forcing_response(projective_odds(normalized, channel))
         for channel in DUAL_CHANNELS
     )
     signed_log_antisymmetric = all(
@@ -324,10 +279,7 @@ def verify_complement_covariance(sequence: str) -> dict[str, bool]:
     }
 
 
-def reverse_complement_window_covariance(
-    sequence: str,
-    window_size: int,
-) -> bool:
+def reverse_complement_window_covariance(sequence: str, window_size: int) -> bool:
     forward = projective_window_odds(sequence, window_size)
     reversed_states = projective_window_odds(reverse_complement(sequence), window_size)
     expected = tuple(
@@ -337,5 +289,4 @@ def reverse_complement_window_covariance(
         )
         for window in reversed(forward)
     )
-    observed = tuple(window.odds for window in reversed_states)
-    return observed == expected
+    return tuple(window.odds for window in reversed_states) == expected
