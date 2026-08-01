@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 from fractions import Fraction
+from functools import lru_cache
 import math
 from typing import Callable, Iterable, Sequence
 
 from .causal_dhse import (
     WINDOWS,
     causal_trajectory,
+    prefix_products,
     projective_image,
     terminal_product,
 )
@@ -53,6 +55,11 @@ def signed_three_quarter_amplitude(value: float) -> float:
     return math.copysign(abs(numeric) ** THREE_QUARTER, numeric)
 
 
+@lru_cache(maxsize=1)
+def _self_dual_references() -> tuple[int, ...]:
+    return tuple(exact_profile(length).evaluate(Fraction(1)) for length in LENGTHS)
+
+
 def self_dual_response(
     response: Sequence[int], *, references: Sequence[int] | None = None
 ) -> tuple[float, ...]:
@@ -60,7 +67,7 @@ def self_dual_response(
     if len(response) != len(LENGTHS):
         raise ValueError("response must contain one value per Stage-M length")
     anchors = (
-        tuple(exact_profile(length).evaluate(Fraction(1)) for length in LENGTHS)
+        _self_dual_references()
         if references is None
         else tuple(int(value) for value in references)
     )
@@ -76,10 +83,13 @@ def phase_window_features(
     sequence: str, *, exponent: float = THREE_QUARTER
 ) -> tuple[float, ...]:
     """Return the frozen six-coordinate reciprocal-odd window readout."""
-    states = causal_trajectory(sequence)
-    if not states:
+    products = prefix_products(sequence)
+    if not products:
         return (0.0,) * 6
-    logs = tuple(state.signed_log_q for state in states)
+    logs = tuple(
+        math.log(q.numerator) - math.log(q.denominator)
+        for q in (projective_image(product) for product in products)
+    )
     deltas = tuple(right - left for left, right in zip(logs, logs[1:]))
     return (
         three_quarter_aggregate(logs, exponent=exponent),
