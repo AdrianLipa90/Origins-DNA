@@ -61,13 +61,7 @@ def _terminal_from_word(word: str, assignment: dict[str, Matrix]) -> Matrix:
 
 @lru_cache(maxsize=1)
 def base_operator_assignment() -> dict[str, Matrix]:
-    """Return the amended deterministic reciprocal-pair assignment.
-
-    A/T use the first lexicographic reciprocal pair. C/G use the first later
-    pair that makes the frozen count-matched words CGCG and CCGG algebraically
-    noncommutative at the terminal-product level. This gate is label blind and
-    was fixed before any predictive benchmark was executed.
-    """
+    """Return the amended deterministic reciprocal-pair assignment."""
     matrices = sorted(tuple(int(value) for value in row) for row in primitive_maps().tolist())
     matrix_set = set(matrices)
     pairs: list[tuple[Matrix, Matrix]] = []
@@ -152,8 +146,22 @@ def conjugate_product_identity(sequence: str) -> bool:
     return operator_word(complemented) == expected
 
 
+def reverse_complement_expected_terminal(sequence: str) -> Matrix:
+    """Return the exact terminal implied by reverse-complement order.
+
+    The involution used here is an automorphism:
+    star(A @ B) = star(A) @ star(B).
+    For w=x1...xn, terminal(w)=Mn...M1, while terminal(rc(w)) is
+    star(M1)...star(Mn). This is generally not star(terminal(w)).
+    """
+    current = IDENTITY
+    for operator in operator_word(sequence):
+        current = multiply(current, reciprocal_conjugate(operator))
+    return current
+
+
 def reverse_complement_terminal_identity(sequence: str) -> bool:
-    return terminal_product(reverse_complement(sequence)) == reciprocal_conjugate(terminal_product(sequence))
+    return terminal_product(reverse_complement(sequence)) == reverse_complement_expected_terminal(sequence)
 
 
 def double_reverse_complement_identity(sequence: str) -> bool:
@@ -183,8 +191,7 @@ def _trajectory_summary(states: Sequence[CausalState], *, include_dhse: bool) ->
     log_delta = tuple(b - a for a, b in zip(logs, logs[1:]))
     residual_delta = tuple(b - a for a, b in zip(residuals, residuals[1:]))
     terminal = states[-1].product
-    a, b, c, d = terminal
-    scale = max(abs(a), abs(b), abs(c), abs(d), 1)
+    scale = max(abs(v) for v in terminal) or 1
     base = (
         _mean(logs), _mean(abs(v) for v in logs), logs[-1],
         _mean(residuals), max(residuals), residuals[-1],
