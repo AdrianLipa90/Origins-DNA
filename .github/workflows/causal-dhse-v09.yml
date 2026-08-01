@@ -1,0 +1,52 @@
+name: Origins-DNA v0.9 causal DHSE validation
+
+on:
+  push:
+    branches:
+      - research/origins-dna-v0.9-causal-dhse
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  exact-causal-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install package
+        run: python -m pip install -e '.[test]'
+      - name: Run causal DHSE tests
+        run: pytest tests/test_causal_dhse.py
+      - name: Run full regression suite
+        run: pytest
+      - name: Compile Python
+        run: python -m compileall -q src scripts
+
+  frozen-causal-benchmark:
+    needs: exact-causal-gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install package
+        run: python -m pip install -e '.[test]'
+      - name: Execute frozen v0.9 benchmark
+        run: >-
+          python scripts/run_causal_dhse_benchmark.py
+          --output results/v0.9_causal_dhse_benchmark.json
+          --samples 400
+          --length 64
+          --motif CGCG
+          --projection-seed 109001
+          --bootstrap-resamples 2000
+      - name: Upload causal result bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: origins-dna-v09-causal-dhse-results
+          path: results/v0.9_causal_dhse_benchmark*
+          if-no-files-found: error
