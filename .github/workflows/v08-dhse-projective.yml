@@ -1,0 +1,62 @@
+name: Origins-DNA v0.8 DHSE projective validation
+
+on:
+  push:
+    branches:
+      - research/origins-dna-v0.8-dhse-projective-balance
+  pull_request:
+    paths:
+      - "src/origins_dna/dhse_*.py"
+      - "tests/test_dhse_projective.py"
+      - "scripts/run_dhse_projective_benchmark.py"
+      - "docs/DHSE_PROJECTIVE_BALANCE_PROTOCOL.md"
+      - "construction/phasenav/origins_dna_dhse_projective_bridge.pnv"
+      - "pyproject.toml"
+      - ".github/workflows/v08-dhse-projective.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-dhse-and-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install package
+        run: python -m pip install -e ".[test]"
+      - name: Run DHSE exact and covariance tests
+        run: pytest -q tests/test_dhse_projective.py
+      - name: Run full regression suite
+        run: pytest -q
+      - name: Compile Python
+        run: python -m compileall -q src scripts
+
+  frozen-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    needs: exact-dhse-and-tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install package
+        run: python -m pip install -e ".[test]"
+      - name: Execute frozen v0.8 benchmark
+        run: |
+          mkdir -p artifacts
+          python scripts/run_dhse_projective_benchmark.py \
+            --output artifacts/v0.8_dhse_projective_benchmark.json
+      - name: Upload exact result bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: origins-dna-v08-dhse-projective-results
+          path: artifacts/*
+          if-no-files-found: error
