@@ -1,0 +1,82 @@
+{
+  "schema": "ORIGINS_DNA_LOCAL_RECONCILIATION_VALIDATION_V1",
+  "date": "2026-10-05",
+  "status": "PASS_WITH_SCOPE_BOUNDARY",
+  "repository": "AdrianLipa90/Origins-DNA",
+  "base_main": "447359b69c62ba9fab6902d2b059e9c6fcbb3a1e",
+  "github_actions_used": false,
+  "dna_local": {
+    "status": "PASS_TARGETED_LOCAL_BEHAVIORAL_RECONSTRUCTION",
+    "byte_identical_full_checkout": false,
+    "full_repo_pytest": false,
+    "compileall": "PASS",
+    "encoding_roundtrips": 2056,
+    "orbital_random_lengths": 128,
+    "benchmark_data_seeds": [
+      11,
+      23
+    ],
+    "sample_count_per_seed": 80,
+    "vector_dimensions": {
+      "base": 4,
+      "dinucleotide": 16,
+      "tetranucleotide": 256,
+      "orbital_multilag": 48
+    }
+  },
+  "on_primes": {
+    "repository": "AdrianLipa90/On-Primes",
+    "head": "372125962a42e1b225337bf31416233da4ca436b",
+    "centered_hexagonal_status": "PASS_LOCAL_EXHAUSTIVE",
+    "checked_n_max": 10000,
+    "checked_prime_modulus_max": 5000,
+    "all_prime_divisors_one_mod_6": true,
+    "root_count_mask_pass": true,
+    "eisenstein_norm_identity_pass": true,
+    "same_exponent_norm": 2371644030976,
+    "same_exponent_prime_support": [
+      2,
+      11,
+      71,
+      181
+    ],
+    "q11_logs": [
+      1,
+      1
+    ],
+    "q61_logs": [
+      9,
+      11
+    ],
+    "rank_two_global_propagation": "OPEN_UNCONDITIONALLY"
+  },
+  "rdss": {
+    "repository": "AdrianLipa90/Relational-Dynamic-State-Space",
+    "head": "d116bc0b60ebadc65d13b0306427857e75ec0f5c",
+    "closure_receipt_status": "PASS_STRUCTURAL_ALGEBRA_CLOSED",
+    "claim_count": 407,
+    "derivation_gate_count": 0,
+    "evidence_gate_count": 1,
+    "physical_binding": "EXTERNAL_EVIDENCE_FRONTIER",
+    "local_checks": {
+      "kappa_normalization": "PASS",
+      "twelve_pair_half_turn_budget": "PASS",
+      "force_antisymmetry_trials": 10000,
+      "second_difference_trials": 10000,
+      "gauge_lyapunov_graph_trials": 1000,
+      "lyapunov_nonpositive": true
+    }
+  },
+  "gremlin": {
+    "status": "PASS_LOCAL_AUDIT_CANDIDATE",
+    "receipt_sha256": "13159fe186f33eb2eb7199cc10dab7811b9212de8089970fb06da876be6aace8",
+    "canon_allowed": false
+  },
+  "epistemic_boundary": [
+    "targeted local reconstruction is not a byte-identical full repository checkout",
+    "prime and RDSS checks constrain mathematical consistency only",
+    "no biological mechanism claim",
+    "no promotion of open On-Primes rank-two lemma",
+    "no physical binding imported from RDSS"
+  ]
+}
