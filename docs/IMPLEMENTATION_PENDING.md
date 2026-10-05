@@ -1,1 +1,3 @@
+> **Status (2026-10-05): HISTORICAL / SUPERSEDED.** This file records a v0.8 branch-time gate. The original text is retained below for provenance. Current repository status is maintained in `docs/REPOSITORY_STATUS_2026_10_05.md`. No current validation claim should be inferred from this historical marker.
+
 The v0.8 branch is not ready for validation until `dhse_projective.py` is wired to `dhse_exact.exact_forcing_response` and NumPy is declared in `pyproject.toml`. CI results before that correction must not be interpreted.
