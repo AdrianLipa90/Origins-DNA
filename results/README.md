@@ -1,3 +1,7 @@
+# Current results boundary
+
+> **Reconciled 2026-10-05.** The committed deterministic result bundles in this directory currently cover v0.3-v0.6. Later v0.8-v0.9.1 source/protocol layers exist in the repository, but this directory does not contain equivalent committed machine-readable bundles for those stages. The preregistered v0.7 default result remains pending. Do not infer a missing result artifact from the presence of later source code.
+
 # Results provenance
 
 The repository retains deterministic machine-readable artifacts for each controlled benchmark.
