@@ -109,3 +109,18 @@ Sequence shuffling must preserve exact per-sequence A/C/G/T counts. Motif-avoida
 The first frozen v0.7 preregistration state contained the Markdown protocol, code, tests and append-only records but omitted the corresponding reviewable LaTeX source and compiled PDF. The omission was identified before execution of the default v0.7 result.
 
 `latex/null_calibrated_contrast_preregistration.tex` records the frozen schedules, estimands, uncertainty procedures, decision rule, control diagnostics and epistemic boundary. It compiled twice locally with zero warnings or layout defects, and all three rendered pages were inspected for clipping, overlap and broken glyphs. GitHub Actions independently compiled it twice and recorded PDF SHA-256 `abb654bd6535218821896c3409ce15c6f7e5931f517ea4db11d1ff3596087666` and remote log-flag count `0`. Binary identity across different TeX distributions is not required. Two earlier materializer runs failed before append or commit, so neither altered the preregistration record. No v0.7 result was executed or interpreted during this correction.
+
+## NOTE-0016 — 2026-10-05 — repository reconciliation, local validation and cross-domain boundaries
+
+The repository had drifted across several status surfaces: the README still described v0.6.0, package metadata declared v0.8.0, the merged research implementation had advanced through v0.9.1, and a later cryptographic design document reused the label v0.9 without implementing the proposed AEAD layer.
+
+This reconciliation is forward-only. Historical research files and negative/mixed outcomes are retained. Package metadata is aligned to the v0.9.1 implementation lineage, while the legacy cryptographic v0.9 document is explicitly classified as design-only and future cryptographic work is separated into its own profile namespace.
+
+GitHub Actions was not available as validation authority. A targeted local behavioral reconstruction passed compilation, reversible 2-bit encoding, complement/reverse-complement, deterministic mutation, shuffle-composition and representation-dimension checks. This is deliberately not represented as a byte-identical complete repository pytest run.
+
+The current On-Primes main head was checked independently. The centered-hexagonal channel reproduced its exact 1 mod 6 divisor restriction and two-root/no-root modular mask, and the current rank-two controls reproduced the finite same-exponent support {2,11,71,181}, q=11 diagonal logs (1,1) and q=61 off-diagonal logs (9,11). The unconditional rank-two global propagation theorem remains open and is not promoted here.
+
+The current RDSS structural algebra was also checked independently. The recorded 407-claim closure has zero derivation gates and one external physical evidence frontier. Local checks reproduced the fixed kappa normalization, pair-force antisymmetry, frame second difference, global-phase gauge invariance and non-positive Lyapunov derivative. These algebraic facts are used only as consistency references; they are not converted into biological evidence.
+
+The local genomic-grammar V17 package remains an external CANDIDATE_ONLY mechanics layer with biological_evidence=false and is not imported in this maintenance branch. The v0.7 default null-calibrated result and PhaseNav Natural implementation also remain pending.
+
