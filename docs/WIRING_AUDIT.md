@@ -1,1 +1,3 @@
+> **Status (2026-10-05): HISTORICAL / SUPERSEDED.** This file records a v0.8 branch-time gate. The original text is retained below for provenance. Current repository status is maintained in `docs/REPOSITORY_STATUS_2026_10_05.md`. No current validation claim should be inferred from this historical marker.
+
 Audit marker only. Exact backend exists, but the branch must not be promoted until the representation import and runtime dependency are corrected and CI confirms them.
